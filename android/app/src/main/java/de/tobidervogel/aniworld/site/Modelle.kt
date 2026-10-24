@@ -22,8 +22,8 @@ enum class Sprache(val key: String, val kurz: String, val lang: String, val flag
     }
 }
 
-/** Ein Cover in einer Liste (Startseite, Genre). */
-data class Karte(val titel: String, val url: String, val cover: String?, val genre: String = "")
+/** Ein Cover in einer Liste (Startseite, Genre). `staffel`: Karte zeigt auf eine bestimmte Staffel. */
+data class Karte(val titel: String, val url: String, val cover: String?, val genre: String = "", val staffel: Int? = null)
 
 data class Genre(val name: String, val slug: String)
 
@@ -36,7 +36,7 @@ data class NeueFolge(
     val sprachen: List<Sprache>,
 )
 
-data class Treffer(val titel: String, val url: String, val beschreibung: String)
+data class Treffer(val titel: String, val url: String, val beschreibung: String, val cover: String? = null)
 
 data class StaffelRef(val nummer: Int, val url: String, val istFilme: Boolean) {
     val name get() = if (istFilme) "Filme" else "Staffel $nummer"

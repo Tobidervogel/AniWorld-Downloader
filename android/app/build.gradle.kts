@@ -17,8 +17,8 @@ android {
         // Bewusst 34 und nicht 36: Ab 35 begrenzt Android dataSync-Dienste auf 6 Stunden am Tag,
         // eine lange Staffel würde dann mitten im Download abbrechen.
         targetSdk = 34
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "0.2.0"
     }
 
     signingConfigs {

@@ -41,7 +41,7 @@ object Aufloeser {
             val redirect = proSprache[name] ?: continue
             try {
                 status("$name wird geöffnet …")
-                val embed = app.aniworld.hosterAdresse(redirect, folgenUrl)
+                val embed = app.anbieter(folgenUrl).hosterAdresse(redirect, folgenUrl)
                 val extraktor = Hosters.fuer(name) ?: Hosters.fuer(embed)
                 val direkt = extraktor?.let {
                     try {

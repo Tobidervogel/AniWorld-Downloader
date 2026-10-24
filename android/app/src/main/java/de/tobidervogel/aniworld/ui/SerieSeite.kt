@@ -76,6 +76,7 @@ import de.tobidervogel.aniworld.download.Status
 import de.tobidervogel.aniworld.hoster.Aufloeser
 import de.tobidervogel.aniworld.site.Folge
 import de.tobidervogel.aniworld.site.FolgenLinks
+import de.tobidervogel.aniworld.site.Folgeninfo
 import de.tobidervogel.aniworld.site.Serie
 import de.tobidervogel.aniworld.site.Sprache
 import de.tobidervogel.aniworld.site.StaffelRef
@@ -101,7 +102,7 @@ fun SerieSeite(ziel: Ziel.Serie, zurueck: () -> Unit) {
         fehler = null
         scope.launch {
             try {
-                val s = app.aniworld.serie(ziel.url, neu)
+                val s = app.anbieter(ziel.url).serie(ziel.url, neu)
                 serie = s
                 app.db.merken(s.url, s.titel, s.cover ?: ziel.cover)
                 if (staffelNr == -1 || s.staffeln.none { it.nummer == staffelNr }) {
@@ -124,7 +125,7 @@ fun SerieSeite(ziel: Ziel.Serie, zurueck: () -> Unit) {
         if (folgen[r.url] != null) return@LaunchedEffect
         folgenFehler.remove(r.url)
         try {
-            folgen[r.url] = app.aniworld.staffel(r)
+            folgen[r.url] = app.anbieter(ziel.url).staffel(r)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -199,7 +200,7 @@ fun SerieSeite(ziel: Ziel.Serie, zurueck: () -> Unit) {
                 Fehlerkasten(folgenFehler[ref.url]!!) {
                     folgenFehler.remove(ref.url)
                     scope.launch {
-                        try { folgen[ref.url] = app.aniworld.staffel(ref, neu = true) } catch (e: Exception) { folgenFehler[ref.url] = e.message ?: "Fehler" }
+                        try { folgen[ref.url] = app.anbieter(ziel.url).staffel(ref, neu = true) } catch (e: Exception) { folgenFehler[ref.url] = e.message ?: "Fehler" }
                     }
                 }
             }
@@ -301,6 +302,8 @@ private fun FolgenZeile(s: Serie, f: Folge, auftraege: List<Auftrag>, live: Map<
     }
 }
 
+private fun Folge.info(s: Serie) = Folgeninfo(s.url, s.titel, staffel, nummer, istFilm)
+
 /** Reiht Folgen ein und startet den Dienst. */
 private fun einreihen(folgen: List<Folge>, sprache: Sprache, hoster: String?, s: Serie): Int {
     val app = App.self
@@ -338,7 +341,7 @@ private fun FolgenBlatt(s: Serie, f: Folge, auftraege: List<Auftrag>, schliessen
 
     LaunchedEffect(f.url) {
         try {
-            links = app.aniworld.links(f.url)
+            links = app.anbieter(f.url).links(f.url)
             if (sprache !in links!!.sprachen) links!!.sprachen.firstOrNull()?.let { sprache = it }
         } catch (e: CancellationException) {
             throw e
@@ -357,7 +360,7 @@ private fun FolgenBlatt(s: Serie, f: Folge, auftraege: List<Auftrag>, schliessen
                 Spacer(Modifier.height(16.dp))
                 Button(
                     onClick = {
-                        PlayerActivity.starten(ctx, datei, "${s.titel} · ${f.kuerzel}", emptyMap(), f.url)
+                        PlayerActivity.starten(ctx, datei, "${s.titel} · ${f.kuerzel}", emptyMap(), f.url, f.info(s))
                         schliessen()
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Farbe.akzent),
@@ -402,7 +405,7 @@ private fun FolgenBlatt(s: Serie, f: Folge, auftraege: List<Auftrag>, schliessen
                             try {
                                 val st = Aufloeser.stream(f.url, l, sprache, hoster) { status = it }
                                 status = null
-                                PlayerActivity.starten(ctx, st.url, "${s.titel} · ${f.kuerzel}", st.header, f.url)
+                                PlayerActivity.starten(ctx, st.url, "${s.titel} · ${f.kuerzel}", st.header, f.url, f.info(s))
                             } catch (e: CancellationException) {
                                 throw e
                             } catch (e: Exception) {
@@ -442,7 +445,7 @@ private fun StaffelBlatt(s: Serie, refs: List<StaffelRef>, cache: MutableMap<Str
         try {
             val alle = ArrayList<Folge>()
             for (r in refs) {
-                val l = cache[r.url] ?: app.aniworld.staffel(r).also { cache[r.url] = it }
+                val l = cache[r.url] ?: app.anbieter(r.url).staffel(r).also { cache[r.url] = it }
                 alle += l
             }
             folgen = alle

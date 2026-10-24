@@ -10,6 +10,7 @@ import android.os.Handler
 import android.os.Looper
 import android.util.TypedValue
 import android.view.Gravity
+import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.FrameLayout
@@ -18,6 +19,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.annotation.OptIn
 import androidx.core.view.WindowCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.media3.common.MediaItem
@@ -34,6 +36,11 @@ import de.tobidervogel.aniworld.App
 import de.tobidervogel.aniworld.Protokoll
 import de.tobidervogel.aniworld.download.Auftrag
 import de.tobidervogel.aniworld.download.Status
+import de.tobidervogel.aniworld.site.AniSkip
+import de.tobidervogel.aniworld.site.Folgeninfo
+import de.tobidervogel.aniworld.site.Sprung
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import java.io.File
 
 /**
@@ -45,12 +52,23 @@ class PlayerActivity : ComponentActivity() {
     private var player: ExoPlayer? = null
     private lateinit var ansicht: PlayerView
     private lateinit var titelText: TextView
+    private lateinit var sprungKnopf: TextView
     private var schluessel = ""
+    private var spruenge: List<Sprung> = emptyList()
+    private val uebersprungen = HashSet<Sprung>()
+    private var steuerungSichtbar = false
+    private var sprungSuche: Job? = null
     private val takt = Handler(Looper.getMainLooper())
     private val merken = object : Runnable {
         override fun run() {
             positionSichern()
             takt.postDelayed(this, 5_000)
+        }
+    }
+    private val spaehen = object : Runnable {
+        override fun run() {
+            sprungPruefen()
+            takt.postDelayed(this, 400)
         }
     }
 
@@ -80,21 +98,23 @@ class PlayerActivity : ComponentActivity() {
         }
         wurzel.addView(titelText, FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.TOP or Gravity.START))
 
-        // Openings dauern bei fast allen Animes 85–90 Sekunden.
-        val opening = TextView(this).apply {
-            text = "Opening +85 s"
+        // Mit AniSkip-Zeiten: "Opening überspringen" genau während des Openings.
+        // Ohne: "Opening +85 s" bei eingeblendeter Steuerung (Openings dauern fast immer 85–90 s).
+        sprungKnopf = TextView(this).apply {
             setTextColor(Color.WHITE)
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
-            setPadding(dp(16), dp(10), dp(16), dp(10))
-            background = GradientDrawable().apply { cornerRadius = dp(20).toFloat(); setColor(0x99202128.toInt()) }
-            setOnClickListener { player?.let { p -> p.seekTo(p.currentPosition + 85_000) } }
+            setPadding(dp(18), dp(11), dp(18), dp(11))
+            background = GradientDrawable().apply { cornerRadius = dp(22).toFloat(); setColor(0xCC202128.toInt()); setStroke(dp(1), 0x66FFFFFF) }
+            setOnClickListener { springen() }
+            visibility = View.GONE
         }
-        wurzel.addView(opening, FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.TOP or Gravity.END).apply {
-            setMargins(0, dp(14), dp(20), 0)
+        wurzel.addView(sprungKnopf, FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.BOTTOM or Gravity.END).apply {
+            setMargins(0, 0, dp(24), dp(92))
         })
         ansicht.setControllerVisibilityListener(PlayerView.ControllerVisibilityListener { v ->
             titelText.visibility = v
-            opening.visibility = v
+            steuerungSichtbar = v == View.VISIBLE
+            sprungPruefen()
         })
         setContentView(wurzel)
 
@@ -102,14 +122,23 @@ class PlayerActivity : ComponentActivity() {
         val namen = intent.getStringArrayExtra(EXTRA_KOPF_NAMEN).orEmpty()
         val werte = intent.getStringArrayExtra(EXTRA_KOPF_WERTE).orEmpty()
         val kopf = namen.zip(werte).toMap()
-        abspielen(uri, intent.getStringExtra(EXTRA_TITEL).orEmpty(), kopf, intent.getStringExtra(EXTRA_SCHLUESSEL).orEmpty())
+        abspielen(uri, intent.getStringExtra(EXTRA_TITEL).orEmpty(), kopf, intent.getStringExtra(EXTRA_SCHLUESSEL).orEmpty(), info(intent))
     }
 
-    private fun abspielen(uri: String, titel: String, kopf: Map<String, String>, schluessel: String) {
+    private fun abspielen(uri: String, titel: String, kopf: Map<String, String>, schluessel: String, info: Folgeninfo?) {
         player?.release()
         this.schluessel = schluessel
         titelText.text = titel
         val app = App.self
+        spruenge = emptyList()
+        uebersprungen.clear()
+        sprungSuche?.cancel()
+        if (info != null && app.einstellungen.aniskip) {
+            sprungSuche = lifecycleScope.launch {
+                spruenge = AniSkip.fuer(info)
+                sprungPruefen()
+            }
+        }
         val http = OkHttpDataSource.Factory(app.netz.client).setDefaultRequestProperties(kopf)
         val quelle = DefaultDataSource.Factory(this, http)
         val p = ExoPlayer.Builder(this)
@@ -151,7 +180,45 @@ class PlayerActivity : ComponentActivity() {
             finish()
             return
         }
-        abspielen(n.datei!!, "${n.serie} · ${n.kuerzel}", emptyMap(), n.url)
+        abspielen(n.datei!!, "${n.serie} · ${n.kuerzel}", emptyMap(), n.url, n.folgeninfo)
+    }
+
+    /** Knopf zeigen oder (mit „automatisch überspringen“) gleich springen. */
+    private fun sprungPruefen() {
+        val p = player ?: return
+        val pos = p.currentPosition
+        val jetzt = spruenge.firstOrNull { pos >= it.vonMs && pos < it.bisMs - 1_000 }
+        when {
+            jetzt != null && App.self.einstellungen.aniskipAuto && jetzt !in uebersprungen -> {
+                // Nur einmal pro Abschnitt: Wer zurückspult, will das Opening sehen.
+                uebersprungen += jetzt
+                p.seekTo(jetzt.bisMs)
+                Toast.makeText(this, "${jetzt.name} übersprungen", Toast.LENGTH_SHORT).show()
+                sprungKnopf.visibility = View.GONE
+            }
+            jetzt != null -> {
+                sprungKnopf.text = "${jetzt.name} überspringen"
+                sprungKnopf.visibility = View.VISIBLE
+            }
+            spruenge.isEmpty() && steuerungSichtbar -> {
+                sprungKnopf.text = "Opening +85 s"
+                sprungKnopf.visibility = View.VISIBLE
+            }
+            else -> sprungKnopf.visibility = View.GONE
+        }
+    }
+
+    private fun springen() {
+        val p = player ?: return
+        val pos = p.currentPosition
+        val jetzt = spruenge.firstOrNull { pos >= it.vonMs && pos < it.bisMs }
+        if (jetzt != null) {
+            uebersprungen += jetzt
+            p.seekTo(jetzt.bisMs)
+        } else {
+            p.seekTo(pos + 85_000)
+        }
+        sprungPruefen()
     }
 
     private fun naechsteGeladene(url: String): Auftrag? {
@@ -174,10 +241,12 @@ class PlayerActivity : ComponentActivity() {
     override fun onStart() {
         super.onStart()
         takt.postDelayed(merken, 5_000)
+        takt.post(spaehen)
     }
 
     override fun onStop() {
         takt.removeCallbacks(merken)
+        takt.removeCallbacks(spaehen)
         positionSichern()
         player?.pause()
         super.onStop()
@@ -195,16 +264,34 @@ class PlayerActivity : ComponentActivity() {
         private const val EXTRA_SCHLUESSEL = "schluessel"
         private const val EXTRA_KOPF_NAMEN = "kopfNamen"
         private const val EXTRA_KOPF_WERTE = "kopfWerte"
+        private const val EXTRA_SERIE_URL = "serieUrl"
+        private const val EXTRA_SERIE = "serie"
+        private const val EXTRA_STAFFEL = "staffel"
+        private const val EXTRA_FOLGE = "folge"
+        private const val EXTRA_FILM = "film"
 
-        /** @param uri Pfad einer geladenen Datei oder eine Stream-Adresse */
-        fun starten(ctx: Context, uri: String, titel: String, kopf: Map<String, String>, schluessel: String) {
+        /**
+         * @param uri  Pfad einer geladenen Datei oder eine Stream-Adresse
+         * @param info Serie/Staffel/Folge für die AniSkip-Zeiten (null: ohne)
+         */
+        fun starten(ctx: Context, uri: String, titel: String, kopf: Map<String, String>, schluessel: String, info: Folgeninfo?) {
             val i = Intent(ctx, PlayerActivity::class.java)
                 .putExtra(EXTRA_URI, uri)
                 .putExtra(EXTRA_TITEL, titel)
                 .putExtra(EXTRA_SCHLUESSEL, schluessel)
                 .putExtra(EXTRA_KOPF_NAMEN, kopf.keys.toTypedArray())
                 .putExtra(EXTRA_KOPF_WERTE, kopf.values.toTypedArray())
+            if (info != null) {
+                i.putExtra(EXTRA_SERIE_URL, info.serieUrl).putExtra(EXTRA_SERIE, info.serie)
+                    .putExtra(EXTRA_STAFFEL, info.staffel).putExtra(EXTRA_FOLGE, info.folge).putExtra(EXTRA_FILM, info.istFilm)
+            }
             ctx.startActivity(i)
+        }
+
+        private fun info(i: Intent): Folgeninfo? {
+            val url = i.getStringExtra(EXTRA_SERIE_URL) ?: return null
+            return Folgeninfo(url, i.getStringExtra(EXTRA_SERIE).orEmpty(), i.getIntExtra(EXTRA_STAFFEL, 0),
+                i.getIntExtra(EXTRA_FOLGE, 0), i.getBooleanExtra(EXTRA_FILM, false))
         }
     }
 }

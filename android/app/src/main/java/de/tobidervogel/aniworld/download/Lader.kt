@@ -76,7 +76,7 @@ class Lader(private val app: App) {
         }
 
         melde(Live("Folgenseite wird gelesen …", null, 0, 0))
-        val links = app.aniworld.links(a.url)
+        val links = app.anbieter(a.url).links(a.url)
         val versucht = HashSet<String>()
         var letzter: Exception? = null
         val arbeit = Speicher.arbeitsordner(app, a.id)

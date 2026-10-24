@@ -56,6 +56,21 @@ class Einstellungen(context: Context) {
         get() = p.getBoolean("browserWeg", true)
         set(v) { p.edit().putBoolean("browserWeg", v).apply(); geaendert() }
 
+    /** Opening/Ending-Zeiten von AniSkip holen und im Player einen Überspringen-Knopf zeigen. */
+    var aniskip: Boolean
+        get() = p.getBoolean("aniskip", true)
+        set(v) { p.edit().putBoolean("aniskip", v).apply(); geaendert() }
+
+    /** Statt Knopf direkt springen. */
+    var aniskipAuto: Boolean
+        get() = p.getBoolean("aniskipAuto", false)
+        set(v) { p.edit().putBoolean("aniskipAuto", v).apply(); geaendert() }
+
+    /** Welche Seite „Entdecken“ zeigt (Name des Anbieters). */
+    var startQuelle: String
+        get() = p.getString("startQuelle", null) ?: "AniWorld"
+        set(v) { p.edit().putString("startQuelle", v).apply(); geaendert() }
+
     var nurWlan: Boolean
         get() = p.getBoolean("nurWlan", false)
         set(v) { p.edit().putBoolean("nurWlan", v).apply(); geaendert() }

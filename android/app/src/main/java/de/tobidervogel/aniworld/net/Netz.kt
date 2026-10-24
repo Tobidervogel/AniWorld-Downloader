@@ -123,7 +123,7 @@ class Netz(context: Context, private val einst: Einstellungen) {
      * sichtbaren Browserfenster laufen (der Nutzer sieht sie und kann ein Rätsel lösen).
      */
     suspend fun seite(url: String, formular: Map<String, String>? = null, header: Map<String, String> = emptyMap()): Antwort {
-        val kopf = mapOf("Referer" to "https://aniworld.to/") + header
+        val kopf = mapOf("Referer" to ursprung(url) + "/") + header
         var a = anfrage(url, kopf, formular)
         if (Check.istCheck(a)) {
             Protokoll.info("Browser-Check nötig für ${host(url)} (HTTP ${a.code})")
@@ -143,5 +143,7 @@ class Netz(context: Context, private val einst: Einstellungen) {
             "Mozilla/5.0 (Linux; Android 16; CPH2493) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Mobile Safari/537.36"
 
         fun host(url: String) = runCatching { url.toHttpUrl().host }.getOrDefault(url)
+
+        fun ursprung(url: String) = runCatching { url.toHttpUrl().let { "${it.scheme}://${it.host}" } }.getOrDefault(url)
     }
 }

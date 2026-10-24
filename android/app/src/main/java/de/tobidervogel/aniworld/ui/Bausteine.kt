@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import de.tobidervogel.aniworld.Protokoll
+import de.tobidervogel.aniworld.net.Netz
 import de.tobidervogel.aniworld.site.Sprache
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -81,7 +82,8 @@ fun Cover(url: String?, modifier: Modifier = Modifier, ecken: Dp = 10.dp) {
     Box(modifier.clip(RoundedCornerShape(ecken)).background(Farbe.flaeche2)) {
         if (url != null) {
             AsyncImage(
-                model = ImageRequest.Builder(ctx).data(url).addHeader("Referer", "https://aniworld.to/").build(),
+                // Manche Seiten liefern Cover nur mit eigenem Referer aus.
+                model = ImageRequest.Builder(ctx).data(url).addHeader("Referer", Netz.ursprung(url) + "/").build(),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize(),

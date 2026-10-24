@@ -137,7 +137,7 @@ fun DownloadsSeite(oeffnen: (Ziel) -> Unit) {
                     if (auf) {
                         items(folgen.sortedWith(compareBy({ it.istFilm }, { it.staffel }, { it.folge })), key = { it.id }) { a ->
                             FertigZeile(a, abspielen = {
-                                PlayerActivity.starten(ctx, a.datei!!, "${a.serie} · ${a.kuerzel}", emptyMap(), a.url)
+                                PlayerActivity.starten(ctx, a.datei!!, "${a.serie} · ${a.kuerzel}", emptyMap(), a.url, a.folgeninfo)
                             }, loeschen = { loeschen = a })
                         }
                     }

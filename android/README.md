@@ -1,24 +1,31 @@
 # AniWorld-App für Android
 
 Eigene Android-App zu diesem Fork, gebaut nur für Tobis **OnePlus Nord 3** (Android 16).
-Sie macht auf dem Handy das, was das Python-Programm am PC macht: auf aniworld.to suchen,
-Staffeln und Folgen ansehen, streamen und herunterladen.
+Sie macht auf dem Handy das, was das Python-Programm am PC macht: auf **aniworld.to** und
+**serienstream.to** suchen, Staffeln und Folgen ansehen, streamen und herunterladen.
 
 Die App ist ein eigenständiger Nachbau in Kotlin. Python, FFmpeg und Chromium laufen auf dem Handy nicht;
 die Logik aus `src/aniworld/` ist deshalb übertragen, nicht eingebunden.
 
 ## Was sie kann
 
-- **Entdecken:** „Derzeit beliebt“, „Neue Animes“, „Neue Folgen“, Genres und zuletzt geöffnete Serien.
-- **Suche** über dieselbe Schnittstelle wie das Original (`/ajax/search`).
-- **Serie:** Cover, Beschreibung, Staffeln und Filme, Folgen mit Sprachen (DE, DE-Sub, EN-Sub, EN).
-- **Streamen** im eingebauten Player (Media3), mit Fortsetzen an der letzten Stelle und „Opening +85 s“.
+- **Zwei Seiten:** AniWorld (Animes) und SerienStream (Serien), oben auf „Entdecken“ umschaltbar.
+  Fällt serienstream.to aus, geht es über serienstream.cx weiter.
+- **Entdecken:** AniWorld mit „Derzeit beliebt“, „Neue Animes“, „Neue Folgen“; SerienStream mit
+  „Neue Staffeln diese Woche“ und „Meistgesehen gerade“. Dazu Genres und zuletzt geöffnete Serien.
+- **Suche** auf beiden Seiten gleichzeitig.
+- **Serie:** Cover, Beschreibung, Staffeln und Filme, Folgen mit Sprachen (AniWorld: DE, DE-Sub, EN-Sub, EN;
+  SerienStream: DE, EN).
+- **Streamen** im eingebauten Player (Media3), mit Fortsetzen an der letzten Stelle.
+- **AniSkip:** Bei Animes holt der Player Opening- und Ending-Zeiten (MyAnimeList über Jikan, dann
+  api.aniskip.com) und zeigt währenddessen „Opening überspringen“. Auf Wunsch springt er automatisch.
+  Ohne Daten bleibt der Knopf „Opening +85 s“.
 - **Herunterladen:** einzelne Folgen, ganze Staffeln oder die ganze Serie, im Hintergrund als Vordergrunddienst.
   Fertige Folgen liegen unter `Movies/AniWorld/<Serie>/Staffel 01/<Serie> S01E01.mp4`.
 - **Hoster:** VOE, Filemoon, Doodstream, Vidoza, Vidmoly. Reihenfolge in den Einstellungen; scheitert einer,
   kommt der nächste. Die Sprache wechselt dabei nie von selbst (wie im Original).
 - Geladene Folgen spielen im Player nacheinander durch.
-- **Links teilen:** Einen aniworld.to-Link aus dem Browser an die App teilen öffnet direkt die Serie.
+- **Links teilen:** Einen aniworld.to- oder serienstream.to-Link an die App teilen öffnet direkt die Serie.
 
 ## Installieren
 
@@ -34,6 +41,8 @@ Updates lassen sich direkt drüber installieren: Alle Builds sind mit `app/aniwo
 | Python-Original | App |
 |---|---|
 | `models/aniworld_to/*.py`, `search.py` | `site/AniWorldParser.kt` (Jsoup statt `find()`-Ketten), `site/AniWorld.kt` |
+| `models/s_to/*.py` | `site/SerienStreamParser.kt`, `site/SerienStream.kt` (Spiegel-Ausweich wie `http.py`) |
+| `aniskip/` | `site/AniSkip.kt` + Knopf im Player |
 | `config.py` `GLOBAL_SESSION` mit `doh+cloudflare` | `net/Netz.kt`: OkHttp mit DNS über HTTPS, Cookies aus der WebView |
 | `playwright/captcha.py` | `net/BrowserCheck.kt` + `ui/BrowserFenster.kt`: sichtbares Browserfenster, Tobi löst ein Rätsel selbst |
 | `extractors/provider/*.py` | `hoster/Voe.kt`, `Filemoon.kt`, `Doodstream.kt`, `Vidmoly.kt`, `Vidoza.kt` |
@@ -57,11 +66,14 @@ cd android
 In einer Cloud-Sitzung antwortet Maven Central manchmal mit 429. Dann hilft ein Gradle-Init-Skript, das
 `repo.maven.apache.org` auf `maven-central.storage-download.googleapis.com/maven2/` umbiegt.
 
-## Grenzen (Stand 0.1.0)
+## Grenzen (Stand 0.2.0)
 
-- **Nicht auf dem Gerät getestet.** Gebaut und mit Unit-Tests geprüft wurde in einer Cloud-Sitzung; aniworld.to
-  sperrt Rechenzentrums-IPs mit einer DDoS-Guard-Prüfung, deshalb lief kein Test gegen die echte Seite.
-  Die Parser sind gegen die Beispiel-HTML aus dem Python-Code und dessen Test-Fixtures geprüft.
+- **Nicht auf dem Gerät getestet.** Gebaut und mit Unit-Tests geprüft wurde in einer Cloud-Sitzung.
+  aniworld.to sperrt Rechenzentrums-IPs mit einer DDoS-Guard-Prüfung; der AniWorld-Parser ist deshalb nur
+  gegen die Beispiel-HTML und Fixtures des Python-Codes geprüft. Der SerienStream-Parser ist gegen Ausschnitte
+  der echten Seite vom 24.10.2026 geprüft (`sto_*.html`), die Weiterleitung `/r` zum Hoster nicht
+  (dort steht für Rechenzentren ebenfalls DDoS-Guard). Das AniSkip-Format ist live geprüft, Jikan war
+  aus der Cloud nicht erreichbar.
 - Bei Fehlern: **Einstellungen → Protokoll → Kopieren** und den Text an Claude geben.
-- Nur aniworld.to. SerienStream und die anderen Seiten des Originals fehlen noch.
-- Kein AniSkip und kein Syncplay.
+- Von den Seiten des Originals fehlen noch MegaKino, Filmo, Moflix, MangaFire und die übrigen.
+- Kein Syncplay.

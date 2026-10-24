@@ -11,13 +11,21 @@ import coil.ImageLoader
 import coil.ImageLoaderFactory
 import de.tobidervogel.aniworld.download.Datenbank
 import de.tobidervogel.aniworld.net.Netz
+import de.tobidervogel.aniworld.site.Anbieter
 import de.tobidervogel.aniworld.site.AniWorld
+import de.tobidervogel.aniworld.site.SerienStream
 
 class App : Application(), ImageLoaderFactory {
     lateinit var einstellungen: Einstellungen
     lateinit var netz: Netz
     lateinit var aniworld: AniWorld
+    lateinit var serienstream: SerienStream
     lateinit var db: Datenbank
+
+    val anbieter: List<Anbieter> get() = listOf(aniworld, serienstream)
+
+    /** Zuständige Seite für eine Adresse; unbekannte Adressen gehen an AniWorld. */
+    fun anbieter(url: String): Anbieter = anbieter.firstOrNull { it.passt(url) } ?: aniworld
 
     override fun onCreate() {
         super.onCreate()
@@ -28,6 +36,7 @@ class App : Application(), ImageLoaderFactory {
         einstellungen = Einstellungen(this)
         netz = Netz(this, einstellungen)
         aniworld = AniWorld(netz)
+        serienstream = SerienStream(netz)
         db = Datenbank(this)
 
         val nm = getSystemService(NotificationManager::class.java)

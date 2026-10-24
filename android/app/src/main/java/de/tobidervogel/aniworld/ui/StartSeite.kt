@@ -41,27 +41,36 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import de.tobidervogel.aniworld.App
+import de.tobidervogel.aniworld.site.Anbieter
 import de.tobidervogel.aniworld.site.AniWorldParser
 import de.tobidervogel.aniworld.site.Karte
 import de.tobidervogel.aniworld.site.NeueFolge
 import kotlinx.coroutines.CoroutineScope
 
+/** Geladene Startseiten pro Anbieter; lebt in der Activity, damit Zurück nicht neu lädt. */
 class StartZustand(scope: CoroutineScope, app: App) {
-    val start = Ladung(scope) { app.aniworld.startseite() }
-    val neueFolgen = Ladung(scope) { app.aniworld.neueFolgen() }
-    val liste = LazyListState()
+    class ProQuelle(scope: CoroutineScope, a: Anbieter) {
+        val start = Ladung(scope) { a.startseite() }
+        val neueFolgen = Ladung(scope) { a.neueFolgen() }
+        val liste = LazyListState()
 
-    fun laden(neu: Boolean = false) {
-        start.start(neu)
-        neueFolgen.start(neu)
+        fun laden(neu: Boolean = false) {
+            start.start(neu)
+            neueFolgen.start(neu)
+        }
     }
+
+    val quellen = app.anbieter.associate { it.name to ProQuelle(scope, it) }
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class, ExperimentalFoundationApi::class)
 @Composable
-fun StartSeite(z: StartZustand, oeffnen: (Ziel) -> Unit) {
+fun StartSeite(zustand: StartZustand, oeffnen: (Ziel) -> Unit) {
     val app = App.self
-    LaunchedEffect(Unit) { z.laden() }
+    app.einstellungen.stand.collectAsState().value
+    val quelle = app.einstellungen.startQuelle.takeIf { it in zustand.quellen } ?: app.aniworld.name
+    val z = zustand.quellen.getValue(quelle)
+    LaunchedEffect(quelle) { z.laden() }
     val stand by app.db.stand.collectAsState()
     val verlauf = remember(stand) { app.db.verlauf() }
     val start = z.start.daten
@@ -74,8 +83,16 @@ fun StartSeite(z: StartZustand, oeffnen: (Ziel) -> Unit) {
         LazyColumn(state = z.liste, modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 24.dp)) {
             item {
                 Column(Modifier.statusBarsPadding().padding(start = 16.dp, end = 16.dp, top = 14.dp)) {
-                    Text("AniWorld", style = MaterialTheme.typography.headlineMedium)
-                    Spacer(Modifier.height(14.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("Entdecken", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.weight(1f))
+                    }
+                    Spacer(Modifier.height(12.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        zustand.quellen.keys.forEach { name ->
+                            Pille(name, gewaehlt = name == quelle) { app.einstellungen.startQuelle = name }
+                        }
+                    }
+                    Spacer(Modifier.height(12.dp))
                     Row(
                         Modifier
                             .fillMaxWidth()
@@ -87,11 +104,12 @@ fun StartSeite(z: StartZustand, oeffnen: (Ziel) -> Unit) {
                     ) {
                         Icon(Icons.Rounded.Search, null, tint = Farbe.text2)
                         Spacer(Modifier.width(10.dp))
-                        Text("Anime suchen", color = Farbe.text2)
+                        Text("Serien und Animes suchen", color = Farbe.text2)
                     }
                 }
             }
 
+            // Zuletzt geöffnet gilt über beide Seiten hinweg.
             if (verlauf.isNotEmpty()) {
                 item { Abschnitt("Zuletzt geöffnet") }
                 item {
@@ -117,8 +135,7 @@ fun StartSeite(z: StartZustand, oeffnen: (Ziel) -> Unit) {
 
             when {
                 start != null -> {
-                    zeile("Derzeit beliebt", start.beliebt, oeffnen)
-                    zeile("Neue Animes", start.neu, oeffnen)
+                    start.reihen.forEach { (titel, karten) -> zeile(titel, karten, oeffnen) }
                     if (start.genres.isNotEmpty()) {
                         item { Abschnitt("Genres") }
                         item {
@@ -127,7 +144,7 @@ fun StartSeite(z: StartZustand, oeffnen: (Ziel) -> Unit) {
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 verticalArrangement = Arrangement.spacedBy(8.dp),
                             ) {
-                                start.genres.forEach { g -> Pille(g.name, gewaehlt = false) { oeffnen(Ziel.GenreListe(g)) } }
+                                start.genres.forEach { g -> Pille(g.name, gewaehlt = false) { oeffnen(Ziel.GenreListe(g, quelle)) } }
                             }
                         }
                     }
@@ -145,7 +162,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.zeile(titel: String, 
     item {
         LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             items(karten, key = { it.url }) { k ->
-                Poster(k.titel, k.cover, Modifier.clickable { oeffnen(Ziel.Serie(k.url, k.titel, k.cover)) })
+                Poster(k.titel, k.cover, Modifier.clickable { oeffnen(Ziel.Serie(k.url, k.titel, k.cover, k.staffel)) })
             }
         }
     }

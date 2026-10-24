@@ -57,7 +57,7 @@ fun BrowserFenster() {
         Column(Modifier.fillMaxSize().background(Farbe.hintergrund).navigationBarsPadding()) {
             Kopfzeile("Browser-Check", zurueck = { a.ergebnis.complete(null) })
             Text(
-                if (a.verlassen) "Vor dem Hoster will AniWorld kurz sehen, dass ein Mensch klickt. Löse das Rätsel, danach geht es von allein weiter."
+                if (a.verlassen) "Vor dem Hoster prüft ${Netz.host(a.url)} kurz den Browser. Kommt ein Rätsel, löse es; danach geht es von allein weiter."
                 else "${Netz.host(a.url)} prüft gerade den Browser. Meist dauert das nur ein paar Sekunden; kommt ein Rätsel, löse es kurz.",
                 color = Farbe.text2,
                 style = MaterialTheme.typography.bodyMedium,
@@ -73,7 +73,7 @@ fun BrowserFenster() {
                         CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
                         webViewClient = object : WebViewClient() {
                             private fun verlassen(url: String): Boolean {
-                                if (a.verlassen && Netz.host(url) != "aniworld.to" && url.startsWith("http")) {
+                                if (a.verlassen && Netz.host(url).removePrefix("www.") !in a.heim && url.startsWith("http")) {
                                     fertig(url)
                                     return true
                                 }

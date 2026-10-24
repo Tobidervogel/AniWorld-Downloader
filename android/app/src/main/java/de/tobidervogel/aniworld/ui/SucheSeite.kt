@@ -4,6 +4,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
@@ -53,6 +56,9 @@ import de.tobidervogel.aniworld.site.Genre
 import de.tobidervogel.aniworld.site.Karte
 import de.tobidervogel.aniworld.site.Treffer
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -60,8 +66,9 @@ import kotlinx.coroutines.launch
 fun SucheSeite(zurueck: () -> Unit, oeffnen: (Ziel) -> Unit) {
     val app = App.self
     var text by rememberSaveable { mutableStateOf("") }
-    var treffer by remember { mutableStateOf<List<Treffer>?>(null) }
-    var fehler by remember { mutableStateOf<String?>(null) }
+    // Ergebnisse pro Anbieter (AniWorld, SerienStream), jeweils mit eigenem Fehler.
+    var treffer by remember { mutableStateOf<Map<String, List<Treffer>>?>(null) }
+    var fehler by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
     var laeuft by remember { mutableStateOf(false) }
     val fokus = remember { FocusRequester() }
     val tastatur = LocalSoftwareKeyboardController.current
@@ -69,16 +76,27 @@ fun SucheSeite(zurueck: () -> Unit, oeffnen: (Ziel) -> Unit) {
     LaunchedEffect(Unit) { fokus.requestFocus() }
     // Erst suchen, wenn 350 ms nichts getippt wurde: spart Anfragen an die Seite.
     LaunchedEffect(text) {
-        if (text.trim().length < 2) { treffer = null; fehler = null; return@LaunchedEffect }
+        if (text.trim().length < 2) { treffer = null; fehler = emptyMap(); return@LaunchedEffect }
         delay(350)
         laeuft = true
+        val f = HashMap<String, String>()
         try {
-            treffer = app.aniworld.suche(text)
-            fehler = null
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            fehler = e.message
+            // Beide Seiten gleichzeitig; fällt eine aus, zeigt die andere trotzdem ihre Treffer.
+            treffer = coroutineScope {
+                app.anbieter.map { a ->
+                    async {
+                        a.name to try {
+                            a.suche(text)
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (e: Exception) {
+                            f[a.name] = e.message ?: "Fehler"
+                            emptyList()
+                        }
+                    }
+                }.awaitAll().toMap()
+            }
+            fehler = f
         } finally {
             laeuft = false
         }
@@ -108,37 +126,51 @@ fun SucheSeite(zurueck: () -> Unit, oeffnen: (Ziel) -> Unit) {
                 modifier = Modifier.weight(1f).focusRequester(fokus),
             )
         }
-        when {
-            fehler != null -> Fehlerkasten(fehler!!)
-            laeuft && treffer == null -> LadeKreis()
-            treffer?.isEmpty() == true -> Text("Nichts gefunden.", color = Farbe.text2, modifier = Modifier.padding(20.dp))
-        }
+        if (laeuft && treffer == null) LadeKreis()
         LazyColumn(contentPadding = PaddingValues(bottom = 24.dp)) {
-            items(treffer.orEmpty(), key = { it.url }) { t ->
-                Column(
-                    Modifier
-                        .fillMaxWidth()
-                        .clickable { tastatur?.hide(); oeffnen(Ziel.Serie(t.url, t.titel, null)) }
-                        .padding(horizontal = 18.dp, vertical = 12.dp),
-                ) {
-                    Text(t.titel, style = MaterialTheme.typography.titleMedium)
-                    if (t.beschreibung.isNotBlank()) {
-                        Text(t.beschreibung, color = Farbe.text2, style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                    }
+            treffer?.forEach { (quelle, liste) ->
+                item(key = "kopf-$quelle") {
+                    Abschnitt(if (liste.isEmpty()) quelle else "$quelle · ${liste.size}", Modifier.padding(top = 0.dp))
                 }
-                HorizontalDivider(color = Farbe.flaeche2, modifier = Modifier.padding(horizontal = 18.dp))
+                fehler[quelle]?.let { item(key = "fehler-$quelle") { Fehlerkasten(it) } }
+                if (liste.isEmpty() && fehler[quelle] == null) {
+                    item(key = "leer-$quelle") { Text("Nichts gefunden.", color = Farbe.text2, modifier = Modifier.padding(horizontal = 18.dp)) }
+                }
+                items(liste, key = { it.url }) { t -> TrefferZeile(t) { tastatur?.hide(); oeffnen(Ziel.Serie(t.url, t.titel, t.cover)) } }
             }
         }
     }
 }
 
-/** Alle Animes eines Genres als Raster, Seite für Seite nachgeladen. */
 @Composable
-fun GenreSeite(genre: Genre, zurueck: () -> Unit, oeffnen: (Ziel) -> Unit) {
+private fun TrefferZeile(t: Treffer, onClick: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (t.cover != null) {
+            Cover(t.cover, Modifier.width(44.dp).height(66.dp), ecken = 6.dp)
+            Spacer(Modifier.width(12.dp))
+        }
+        Column(Modifier.weight(1f)) {
+            Text(t.titel, style = MaterialTheme.typography.titleMedium)
+            if (t.beschreibung.isNotBlank()) {
+                Text(t.beschreibung, color = Farbe.text2, style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            }
+        }
+    }
+    HorizontalDivider(color = Farbe.flaeche2, modifier = Modifier.padding(horizontal = 16.dp))
+}
+
+/** Alle Serien eines Genres als Raster, Seite für Seite nachgeladen. */
+@Composable
+fun GenreSeite(ziel: Ziel.GenreListe, zurueck: () -> Unit, oeffnen: (Ziel) -> Unit) {
     val app = App.self
-    val karten = remember(genre.slug) { mutableStateListOf<Karte>() }
-    var seite by remember(genre.slug) { mutableIntStateOf(0) }
-    var weiter by remember(genre.slug) { mutableStateOf(true) }
+    val genre = ziel.genre
+    val quelle = app.anbieter.firstOrNull { it.name == ziel.quelle } ?: app.aniworld
+    val karten = remember(ziel) { mutableStateListOf<Karte>() }
+    var seite by remember(ziel) { mutableIntStateOf(0) }
+    var weiter by remember(ziel) { mutableStateOf(true) }
     var laeuft by remember { mutableStateOf(false) }
     var fehler by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
@@ -149,7 +181,7 @@ fun GenreSeite(genre: Genre, zurueck: () -> Unit, oeffnen: (Ziel) -> Unit) {
         laeuft = true
         scope.launch {
             try {
-                val (neu, gibtMehr) = app.aniworld.genre(genre.slug, seite + 1)
+                val (neu, gibtMehr) = quelle.genre(genre.slug, seite + 1)
                 karten += neu.filter { k -> karten.none { it.url == k.url } }
                 seite++
                 weiter = gibtMehr && neu.isNotEmpty()
@@ -164,7 +196,7 @@ fun GenreSeite(genre: Genre, zurueck: () -> Unit, oeffnen: (Ziel) -> Unit) {
         }
     }
 
-    LaunchedEffect(genre.slug) { if (karten.isEmpty()) mehr() }
+    LaunchedEffect(ziel) { if (karten.isEmpty()) mehr() }
     LaunchedEffect(raster) {
         snapshotFlow { raster.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0 }.collect { letzter ->
             if (letzter >= karten.size - 6) mehr()
@@ -182,7 +214,7 @@ fun GenreSeite(genre: Genre, zurueck: () -> Unit, oeffnen: (Ziel) -> Unit) {
             verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(16.dp),
         ) {
             items(karten, key = { it.url }) { k ->
-                Poster(k.titel, k.cover, Modifier.clickable { oeffnen(Ziel.Serie(k.url, k.titel, k.cover)) }, breite = 112.dp)
+                Poster(k.titel, k.cover, Modifier.clickable { oeffnen(Ziel.Serie(k.url, k.titel, k.cover, k.staffel)) }, breite = 112.dp)
             }
             if (laeuft) item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(3) }) { LadeKreis() }
         }

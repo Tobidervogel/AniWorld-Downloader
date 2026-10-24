@@ -5,6 +5,7 @@ import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import de.tobidervogel.aniworld.site.Folgeninfo
 import de.tobidervogel.aniworld.site.Sprache
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -35,6 +36,7 @@ data class Auftrag(
     val erstellt: Long = System.currentTimeMillis(),
 ) {
     val kuerzel get() = if (istFilm) "Film $folge" else "S%02dE%02d".format(staffel, folge)
+    val folgeninfo get() = Folgeninfo(serieUrl, serie, staffel, folge, istFilm)
 }
 
 data class Verlauf(val url: String, val titel: String, val cover: String?)

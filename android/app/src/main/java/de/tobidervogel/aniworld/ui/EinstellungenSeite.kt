@@ -112,6 +112,11 @@ fun EinstellungenSeite(oeffnen: (Ziel) -> Unit) {
             Schalter("Browser als Ausweichweg", "Klappt kein Extraktor, öffnet die App den Hoster unsichtbar und liest die Videoadresse mit", e.browserWeg) { e.browserWeg = it }
         }
 
+        Gruppe("Player") {
+            Schalter("AniSkip", "Opening und Ending erkennen und einen Überspringen-Knopf zeigen (Daten von aniskip.com)", e.aniskip) { e.aniskip = it }
+            Schalter("Automatisch überspringen", "Statt Knopf direkt springen, einmal pro Folge", e.aniskipAuto) { e.aniskipAuto = it }
+        }
+
         Gruppe("Laden") {
             Text("Folgen gleichzeitig", Modifier.padding(start = 16.dp, top = 8.dp))
             Row(Modifier.padding(16.dp, 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {

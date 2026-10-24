@@ -15,10 +15,10 @@ import kotlinx.coroutines.withTimeoutOrNull
  */
 object BrowserCheck {
     /**
-     * @param verlassen true beim Redirect zum Hoster: fertig, sobald die Seite aniworld.to
-     *                  verlässt. Das Ergebnis ist dann die Hoster-Adresse.
+     * @param verlassen true beim Redirect zum Hoster: fertig, sobald die Seite die Hosts in
+     *                  [heim] verlässt. Das Ergebnis ist dann die Hoster-Adresse.
      */
-    class Anfrage(val url: String, val verlassen: Boolean) {
+    class Anfrage(val url: String, val verlassen: Boolean, val heim: Set<String>) {
         val ergebnis = CompletableDeferred<String?>()
     }
 
@@ -32,10 +32,10 @@ object BrowserCheck {
     @Volatile private var zuletztGeloest = 0L
 
     /** Liefert die Endadresse nach bestandener Prüfung, sonst null (abgebrochen, Zeit um). */
-    suspend fun loesen(url: String, verlassen: Boolean = false): String? = sperre.withLock {
+    suspend fun loesen(url: String, verlassen: Boolean = false, heim: Set<String> = emptySet()): String? = sperre.withLock {
         // Mehrere Seitenanfragen gleichzeitig: Die erste löst, die anderen versuchen es danach direkt nochmal.
         if (!verlassen && System.currentTimeMillis() - zuletztGeloest < 30_000) return@withLock url
-        val anfrage = Anfrage(url, verlassen)
+        val anfrage = Anfrage(url, verlassen, heim)
         _offen.value = anfrage
         if (!appSichtbar) App.self.meldeCheck()
         val ende = withTimeoutOrNull(10 * 60_000L) { anfrage.ergebnis.await() }

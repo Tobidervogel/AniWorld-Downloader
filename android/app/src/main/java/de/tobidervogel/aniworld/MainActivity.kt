@@ -36,7 +36,6 @@ import androidx.lifecycle.lifecycleScope
 import de.tobidervogel.aniworld.download.DownloadService
 import de.tobidervogel.aniworld.download.Status
 import de.tobidervogel.aniworld.net.BrowserCheck
-import de.tobidervogel.aniworld.site.AniWorldParser
 import de.tobidervogel.aniworld.ui.BrowserFenster
 import de.tobidervogel.aniworld.ui.DownloadsSeite
 import de.tobidervogel.aniworld.ui.EinstellungenSeite
@@ -91,8 +90,9 @@ class MainActivity : ComponentActivity() {
             Intent.ACTION_SEND -> i.getStringExtra(Intent.EXTRA_TEXT)
             else -> null
         } ?: return
-        val link = Regex("""https?://(?:www\.)?aniworld\.to/anime/stream/[^\s"']+""").find(text)?.value ?: return
-        val serie = AniWorldParser.serienUrl(link) ?: return
+        val link = Regex("""https?://(?:www\.)?(?:aniworld\.to/anime/stream|serienstream\.(?:to|cx)/serie|s\.to/serie)/[^\s"']+""")
+            .find(text)?.value ?: return
+        val serie = App.self.anbieter(link).serienUrl(link) ?: return
         val staffel = Regex("staffel-(\\d+)").find(link)?.groupValues?.get(1)?.toIntOrNull()
         tab = TAB_START
         stapel.clear()
@@ -142,7 +142,7 @@ class MainActivity : ComponentActivity() {
                         else -> StartSeite(start, oeffnen)
                     }
                     is Ziel.Serie -> SerieSeite(z, zurueck)
-                    is Ziel.GenreListe -> GenreSeite(z.genre, zurueck, oeffnen)
+                    is Ziel.GenreListe -> GenreSeite(z, zurueck, oeffnen)
                     Ziel.Suche -> SucheSeite(zurueck, oeffnen)
                     Ziel.ProtokollAnsicht -> ProtokollSeite(zurueck)
                 }
