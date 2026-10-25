@@ -1,8 +1,17 @@
 package de.tobidervogel.aniworld.download
 
+import android.Manifest
+import android.app.Activity
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.media.MediaScannerConnection
+import android.net.Uri
+import android.os.Build
 import android.os.Environment
 import android.os.StatFs
+import android.provider.Settings
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import de.tobidervogel.aniworld.App
 import de.tobidervogel.aniworld.Protokoll
 import de.tobidervogel.aniworld.R
@@ -18,6 +27,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
@@ -38,7 +48,25 @@ import kotlin.coroutines.coroutineContext
 data class Live(val text: String, val anteil: Float?, val bytes: Long, val tempo: Long)
 
 object Speicher {
-    fun vollzugriff() = Environment.isExternalStorageManager()
+    /** Zählt hoch, wenn sich der Zugriff geändert haben kann (zurück aus den Einstellungen, Dialog beantwortet). */
+    val stand = MutableStateFlow(0)
+
+    /**
+     * Darf die App in den gewählten Ordner schreiben? Ab Android 11 heißt das „Zugriff auf alle
+     * Dateien“, davor reicht die alte Speicherberechtigung (Android 10 mit requestLegacyExternalStorage).
+     */
+    fun vollzugriff(): Boolean =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) Environment.isExternalStorageManager()
+        else ContextCompat.checkSelfPermission(App.self, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+
+    /** Die passende Freigabe öffnen: Einstellungsseite ab Android 11, sonst den Berechtigungsdialog. */
+    fun zugriffAnfragen(activity: Activity) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            activity.startActivity(Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, Uri.parse("package:${activity.packageName}")))
+        } else {
+            ActivityCompat.requestPermissions(activity, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), 2)
+        }
+    }
 
     /** Ohne „Zugriff auf alle Dateien“ landet alles in Android/media der App (auch für die Galerie sichtbar). */
     @Suppress("DEPRECATION")

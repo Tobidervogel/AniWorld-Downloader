@@ -69,6 +69,7 @@ fun EinstellungenSeite(oeffnen: (Ziel) -> Unit) {
     val ctx = LocalContext.current
     // Die Werte liegen in SharedPreferences; der Zähler sorgt dafür, dass nach jeder Änderung neu gezeichnet wird.
     e.stand.collectAsState().value
+    Speicher.stand.collectAsState().value
     var ordnerDialog by remember { mutableStateOf(false) }
     val akkuFrei = ctx.getSystemService(PowerManager::class.java).isIgnoringBatteryOptimizations(ctx.packageName)
 
@@ -82,7 +83,7 @@ fun EinstellungenSeite(oeffnen: (Ziel) -> Unit) {
                 stringResource(R.string.zugriff_alle_dateien),
                 if (Speicher.vollzugriff()) stringResource(R.string.erlaubt) else stringResource(R.string.nicht_erlaubt),
             ) {
-                ctx.startActivity(Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, Uri.parse("package:${ctx.packageName}")))
+                ctx.activity()?.let { Speicher.zugriffAnfragen(it) }
             }
             Schalter(stringResource(R.string.mp4), stringResource(R.string.mp4_text), e.mp4) { e.mp4 = it }
         }

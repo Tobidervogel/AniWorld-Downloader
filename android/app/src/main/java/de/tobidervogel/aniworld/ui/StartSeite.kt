@@ -44,7 +44,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
@@ -221,7 +220,7 @@ private fun Spotlight(@StringRes reihe: Int, quelle: String, karten: List<Karte>
                     .border(1.dp, Farbe.linie, Rund)
                     .clickable { oeffnen(Ziel.Serie(k.url, k.titel, k.cover, k.staffel)) },
             ) {
-                Cover(k.cover, Modifier.fillMaxSize().blur(26.dp), ecken = 0.dp)
+                Cover(k.cover, Modifier.fillMaxSize().unscharf(26.dp), ecken = 0.dp)
                 Box(
                     Modifier.fillMaxSize().background(
                         Brush.horizontalGradient(listOf(Farbe.hintergrund.copy(alpha = 0.96f), Farbe.hintergrund.copy(alpha = 0.55f))),

@@ -1,5 +1,9 @@
 package de.tobidervogel.aniworld.ui
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
+import android.os.Build
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -45,6 +49,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
@@ -73,6 +79,20 @@ import de.tobidervogel.aniworld.site.StaffelRef
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+
+/** Die Activity hinter einem Compose-Kontext (für Berechtigungsdialoge). */
+tailrec fun Context.activity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.activity()
+    else -> null
+}
+
+/**
+ * Unscharfer Hintergrund. Weichzeichnen kann Android erst ab 12; davor bleibt das Bild scharf
+ * und wird stattdessen stark abgedunkelt, damit der Text darüber lesbar bleibt.
+ */
+fun Modifier.unscharf(radius: Dp): Modifier =
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) blur(radius) else alpha(0.35f)
 
 /** Lädt etwas einmal und merkt sich Ergebnis oder Fehler; lebt außerhalb der Komposition. */
 class Ladung<T>(private val scope: CoroutineScope, private val holen: suspend () -> T) {

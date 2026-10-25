@@ -13,8 +13,9 @@ android {
 
     defaultConfig {
         applicationId = "de.tobidervogel.aniworld"
-        // Android 14 und neuer. 34 spart alle Sonderwege für ältere Versionen.
-        minSdk = 34
+        // Android 8 und neuer. Was erst später kam (Weichzeichnen ab 12, „Zugriff auf alle Dateien“
+        // ab 11, Benachrichtigungsfrage ab 13), fragt der Code an Ort und Stelle ab.
+        minSdk = 26
         // Bewusst 34 und nicht 36: Ab 35 begrenzt Android dataSync-Dienste auf 6 Stunden am Tag,
         // eine lange Staffel würde dann mitten im Download abbrechen.
         targetSdk = 34

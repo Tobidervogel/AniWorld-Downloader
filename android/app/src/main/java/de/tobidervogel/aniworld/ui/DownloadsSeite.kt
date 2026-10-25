@@ -1,9 +1,6 @@
 package de.tobidervogel.aniworld.ui
 
-import android.content.Intent
 import android.media.MediaScannerConnection
-import android.net.Uri
-import android.provider.Settings
 import androidx.annotation.StringRes
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
@@ -91,6 +88,7 @@ fun WarteschlangeSeite(oeffnen: (Ziel) -> Unit) {
     val ctx = LocalContext.current
     val stand by app.db.stand.collectAsState()
     val live by DownloadService.live.collectAsState()
+    Speicher.stand.collectAsState().value
     val offen = remember(stand) {
         app.db.alle().filter { it.status != Status.FERTIG }
             .sortedWith(compareBy({ reihe(it.status) }, { it.erstellt }, { it.staffel }, { it.folge }))
@@ -119,7 +117,7 @@ fun WarteschlangeSeite(oeffnen: (Ziel) -> Unit) {
                     stringResource(R.string.zugriff_hinweis, app.einstellungen.ordner),
                     Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
                     aktion = stringResource(R.string.zugriff_erlauben) to {
-                        ctx.startActivity(Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, Uri.parse("package:${ctx.packageName}")))
+                        ctx.activity()?.let { Speicher.zugriffAnfragen(it) }
                     },
                 )
             }

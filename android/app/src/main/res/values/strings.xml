@@ -83,7 +83,7 @@
     <string name="filter_alle">All</string>
     <string name="alle_pausieren">Pause all</string>
     <string name="fortsetzen">Resume</string>
-    <string name="zugriff_hinweis">Without “All files access”, episodes are saved to Android/media instead of %1$s.</string>
+    <string name="zugriff_hinweis">Without storage access, episodes are saved to Android/media instead of %1$s.</string>
     <string name="zugriff_erlauben">Allow access</string>
     <string name="fehler_neu_starten">Retry failed</string>
     <string name="fehler_entfernen">Remove failed</string>
@@ -111,7 +111,7 @@
     <string name="speicher">Storage</string>
     <string name="ordner">Folder</string>
     <string name="media_ohne_zugriff">Android/media (no access)</string>
-    <string name="zugriff_alle_dateien">All files access</string>
+    <string name="zugriff_alle_dateien">Storage access</string>
     <string name="erlaubt">Allowed</string>
     <string name="nicht_erlaubt">Not allowed – tap</string>
     <string name="mp4">Remux to MP4</string>

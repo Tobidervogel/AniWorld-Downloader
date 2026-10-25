@@ -56,7 +56,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -305,7 +304,7 @@ private fun Kopf(s: Serie?, ziel: Ziel.Serie, quelle: String, zurueck: () -> Uni
     val cover = s?.cover ?: ziel.cover
     Box(Modifier.fillMaxWidth()) {
         // Unscharfes Cover als Hintergrund, nach unten in den Seitenhintergrund ausgeblendet.
-        Cover(cover, Modifier.matchParentSize().blur(30.dp), ecken = 0.dp)
+        Cover(cover, Modifier.matchParentSize().unscharf(30.dp), ecken = 0.dp)
         Box(
             Modifier.matchParentSize().background(
                 Brush.verticalGradient(listOf(Farbe.hintergrund.copy(alpha = 0.5f), Farbe.hintergrund.copy(alpha = 0.85f), Farbe.hintergrund)),

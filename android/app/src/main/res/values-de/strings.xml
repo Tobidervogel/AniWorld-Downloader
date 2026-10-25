@@ -81,7 +81,7 @@
     <string name="filter_alle">Alle</string>
     <string name="alle_pausieren">Alle pausieren</string>
     <string name="fortsetzen">Fortsetzen</string>
-    <string name="zugriff_hinweis">Ohne „Zugriff auf alle Dateien“ landen die Folgen in Android/media statt in %1$s.</string>
+    <string name="zugriff_hinweis">Ohne Speicherzugriff landen die Folgen in Android/media statt in %1$s.</string>
     <string name="zugriff_erlauben">Zugriff erlauben</string>
     <string name="fehler_neu_starten">Fehler neu starten</string>
     <string name="fehler_entfernen">Fehler entfernen</string>
@@ -109,7 +109,7 @@
     <string name="speicher">Speicher</string>
     <string name="ordner">Ordner</string>
     <string name="media_ohne_zugriff">Android/media (Zugriff fehlt)</string>
-    <string name="zugriff_alle_dateien">Zugriff auf alle Dateien</string>
+    <string name="zugriff_alle_dateien">Speicherzugriff</string>
     <string name="erlaubt">Erlaubt</string>
     <string name="nicht_erlaubt">Nicht erlaubt – tippen</string>
     <string name="mp4">Zu MP4 umpacken</string>

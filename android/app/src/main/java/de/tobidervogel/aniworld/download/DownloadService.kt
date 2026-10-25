@@ -10,6 +10,7 @@ import android.content.pm.ServiceInfo
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.wifi.WifiManager
+import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
 import androidx.core.app.NotificationCompat
@@ -73,7 +74,9 @@ class DownloadService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         letzteStartId = startId
         // Jeder startForegroundService()-Aufruf verlangt startForeground(), auch wenn der Dienst schon läuft.
-        ServiceCompat.startForeground(this, ID_LAUF, meldung(getString(R.string.dl_starten), null), ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+        // Den Diensttyp kennt Android erst ab 10; davor gibt es nur „Vordergrund“.
+        val typ = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC else 0
+        ServiceCompat.startForeground(this, ID_LAUF, meldung(getString(R.string.dl_starten), null), typ)
         if (schleifeAktiv.compareAndSet(false, true)) scope.launch { schleife() } else wecker.trySend(Unit)
         return START_STICKY
     }

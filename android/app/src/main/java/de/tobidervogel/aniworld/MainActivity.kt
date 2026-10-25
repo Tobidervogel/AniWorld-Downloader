@@ -3,6 +3,7 @@ package de.tobidervogel.aniworld
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -43,6 +44,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
 import de.tobidervogel.aniworld.download.DownloadService
+import de.tobidervogel.aniworld.download.Speicher
 import de.tobidervogel.aniworld.download.Status
 import de.tobidervogel.aniworld.net.BrowserCheck
 import de.tobidervogel.aniworld.ui.AblageSeite
@@ -61,6 +63,7 @@ import de.tobidervogel.aniworld.ui.Trennlinie
 import de.tobidervogel.aniworld.ui.WarteschlangeSeite
 import de.tobidervogel.aniworld.ui.Ziel
 import de.tobidervogel.aniworld.ui.titelAusAdresse
+import kotlinx.coroutines.flow.update
 
 class MainActivity : ComponentActivity() {
     private var tab by mutableStateOf(TAB_START)
@@ -69,7 +72,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-        if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+        // Benachrichtigungen muss man erst ab Android 13 erlauben.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) {
             requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1)
         }
         val start = StartZustand(lifecycleScope, App.self.anbieter)
@@ -87,6 +93,12 @@ class MainActivity : ComponentActivity() {
     override fun onStart() {
         super.onStart()
         BrowserCheck.appSichtbar = true
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Zurück aus den Systemeinstellungen oder einem Berechtigungsdialog: Speicherzugriff neu prüfen.
+        Speicher.stand.update { it + 1 }
     }
 
     override fun onStop() {
