@@ -25,6 +25,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
+import de.tobidervogel.aniworld.hoster.Stream
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
@@ -169,7 +170,7 @@ class PlayerActivity : ComponentActivity() {
 
         val ziel = if (uri.startsWith("/")) Uri.fromFile(File(uri)) else Uri.parse(uri)
         val item = MediaItem.Builder().setUri(ziel)
-        if (".m3u8" in uri) item.setMimeType(MimeTypes.APPLICATION_M3U8)
+        if (Stream.istHls(uri)) item.setMimeType(MimeTypes.APPLICATION_M3U8)
         p.setMediaItem(item.build())
 
         app.db.position(schluessel)?.let { (ms, dauer) ->

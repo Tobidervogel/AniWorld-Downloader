@@ -62,6 +62,34 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="https" android:host="filmpalast.to" android:pathPrefix="/stream/" />
             </intent-filter>
+            <intent-filter android:autoVerify="false">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" />
+                <data android:host="bs.to" />
+                <data android:host="bs.cine.to" />
+                <data android:host="burning-series.io" />
+                <data android:host="burning-series.net" />
+                <data android:pathPrefix="/serie/" />
+            </intent-filter>
+            <intent-filter android:autoVerify="false">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" />
+                <data android:host="kinox.to" />
+                <data android:host="kinos.to" />
+                <data android:host="kinoz.to" />
+                <data android:pathPrefix="/Stream/" />
+            </intent-filter>
+            <!-- MegaKino wechselt die Domain; hier steht nur die aktuelle, geteilte Links gehen immer. -->
+            <intent-filter android:autoVerify="false">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="megakino25.com" android:pathPattern="/.*/.*-.*\\.html" />
+            </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
                 <category android:name="android.intent.category.DEFAULT" />

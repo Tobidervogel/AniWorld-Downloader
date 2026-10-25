@@ -67,6 +67,7 @@ import de.tobidervogel.aniworld.Protokoll
 import de.tobidervogel.aniworld.R
 import de.tobidervogel.aniworld.download.Status
 import de.tobidervogel.aniworld.net.Netz
+import de.tobidervogel.aniworld.site.MegaKinoParser
 import de.tobidervogel.aniworld.site.Sprache
 import de.tobidervogel.aniworld.site.StaffelRef
 import kotlinx.coroutines.CancellationException
@@ -382,6 +383,7 @@ fun seitenLogo(seite: String) = when (seite) {
     "FilmPalast" -> "https://filmpalast.to/favicon.ico"
     "BurningSeries" -> "https://bs.cine.to/favicon.ico"
     "Kinox" -> "https://kinox.to/favicon.ico"
+    "MegaKino" -> "https://${MegaKinoParser.STANDARD}/favicon.ico"
     else -> "https://aniworld.to/favicon.ico"
 }
 

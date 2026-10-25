@@ -8,7 +8,12 @@ data class Stream(
     val header: Map<String, String>,
     val hoster: String,
 ) {
-    val istHls get() = url.substringBefore('?').endsWith(".m3u8", ignoreCase = true) || ".m3u8" in url
+    val istHls get() = istHls(url)
+
+    companion object {
+        /** HLS erkennt man an „.m3u8“; GXPlayer liefert die Playlist als `/m3u8/…/master.txt`. */
+        fun istHls(url: String) = url.lowercase().let { ".m3u8" in it || "/m3u8/" in it }
+    }
 }
 
 interface Hoster {
@@ -17,7 +22,7 @@ interface Hoster {
 }
 
 object Hosters {
-    val alle: List<Hoster> = listOf(Voe, Filemoon, Doodstream, Vidmoly, Vidoza)
+    val alle: List<Hoster> = listOf(Voe, Filemoon, Doodstream, Vidmoly, Vidoza, GxPlayer)
 
     // Wie _ALIASES in models/common/provider_map.py: Teilstring im Namen oder in der Adresse.
     private val aliase = listOf(
@@ -27,6 +32,7 @@ object Hosters {
         "vidoza" to Vidoza,
         "filemoon" to Filemoon,
         "byse" to Filemoon,
+        "gxplayer" to GxPlayer,
     )
 
     fun fuer(name: String): Hoster? {
