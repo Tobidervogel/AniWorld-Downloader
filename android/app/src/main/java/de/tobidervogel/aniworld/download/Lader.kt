@@ -19,6 +19,7 @@ import de.tobidervogel.aniworld.hoster.Aufloeser
 import de.tobidervogel.aniworld.hoster.Stream
 import de.tobidervogel.aniworld.net.NetzFehler
 import de.tobidervogel.aniworld.tr
+import de.tobidervogel.aniworld.ui.Freigaben
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -62,7 +63,11 @@ object Speicher {
     /** Die passende Freigabe öffnen: Einstellungsseite ab Android 11, sonst den Berechtigungsdialog. */
     fun zugriffAnfragen(activity: Activity) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            activity.startActivity(Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, Uri.parse("package:${activity.packageName}")))
+            Freigaben.oeffnen(
+                activity,
+                Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, Uri.parse("package:${activity.packageName}")),
+                Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION),
+            )
         } else {
             ActivityCompat.requestPermissions(activity, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), 2)
         }

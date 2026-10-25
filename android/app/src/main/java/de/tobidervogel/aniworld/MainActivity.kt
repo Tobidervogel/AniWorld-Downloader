@@ -1,9 +1,6 @@
 package de.tobidervogel.aniworld
 
-import android.Manifest
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -50,6 +47,7 @@ import de.tobidervogel.aniworld.net.BrowserCheck
 import de.tobidervogel.aniworld.ui.AblageSeite
 import de.tobidervogel.aniworld.ui.BibliothekSeite
 import de.tobidervogel.aniworld.ui.BrowserFenster
+import de.tobidervogel.aniworld.ui.EinrichtungSeite
 import de.tobidervogel.aniworld.ui.EinstellungenSeite
 import de.tobidervogel.aniworld.ui.Farbe
 import de.tobidervogel.aniworld.ui.GenreSeite
@@ -72,15 +70,15 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-        // Benachrichtigungen muss man erst ab Android 13 erlauben.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
-        ) {
-            requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1)
-        }
         val start = StartZustand(lifecycleScope, App.self.anbieter)
         verarbeiten(intent)
-        setContent { Thema { Oberflaeche(start) } }
+        setContent {
+            Thema {
+                // Beim ersten Start die Einrichtung; sie fragt die Berechtigungen mit Erklärung ab.
+                App.self.einstellungen.stand.collectAsState().value
+                if (App.self.einstellungen.einrichtungFertig) Oberflaeche(start) else EinrichtungSeite { }
+            }
+        }
     }
 
     override fun onNewIntent(intent: Intent) {

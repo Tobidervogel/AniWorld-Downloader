@@ -75,6 +75,11 @@ class Einstellungen(context: Context) {
         get() = p.getBoolean("nurWlan", false)
         set(v) { p.edit().putBoolean("nurWlan", v).apply(); geaendert() }
 
+    /** Einrichtung beim ersten Start abgeschlossen (oder übersprungen). */
+    var einrichtungFertig: Boolean
+        get() = p.getBoolean("einrichtungFertig", false)
+        set(v) { p.edit().putBoolean("einrichtungFertig", v).apply(); geaendert() }
+
     /** Serien aus der Bibliothek regelmäßig auf neue Folgen prüfen (siehe AutoSync). */
     var autoSync: Boolean
         get() = p.getBoolean("autoSync", false)

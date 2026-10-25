@@ -262,4 +262,20 @@
         <item quantity="one">%d series not reachable</item>
         <item quantity="other">%d series not reachable</item>
     </plurals>
+    <string name="einrichtung">Setup</string>
+    <string name="einrichtung_text">Go through the permissions again, step by step</string>
+    <string name="einrichtung_willkommen">Welcome to AniApp</string>
+    <string name="einrichtung_willkommen_text">Stream and download anime, series and movies from eight sites. A short setup first; it takes about a minute.</string>
+    <string name="einrichtung_los">Get started</string>
+    <string name="einrichtung_benachrichtigungen">Notifications</string>
+    <string name="einrichtung_benachrichtigungen_text">So you can see how far your downloads are and find out when Auto-Sync has queued new episodes.</string>
+    <string name="einrichtung_speicher_text">Episodes are saved to %1$s, where your gallery and other players find them. Without access they stay in the app folder under Android/media.</string>
+    <string name="einrichtung_akku_text">Many phones stop long downloads in the background. Turn battery optimization off for AniApp so whole seasons can finish.</string>
+    <string name="einrichtung_fertig">All set</string>
+    <string name="einrichtung_fertig_text">Pick the language for new downloads. Everything can be changed later in the settings.</string>
+    <string name="einrichtung_autosync_text">Queue newly released episodes of series in your library</string>
+    <string name="einrichtung_oeffnen">Open AniApp</string>
+    <string name="einrichtung_erlauben">Allow</string>
+    <string name="einrichtung_spaeter">Later</string>
+    <string name="einrichtung_weiter">Next</string>
 </resources>

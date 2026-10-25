@@ -5,8 +5,6 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Intent
 import android.net.Uri
-import android.os.PowerManager
-import android.provider.Settings
 import android.text.format.DateUtils
 import android.webkit.CookieManager
 import android.widget.Toast
@@ -78,7 +76,7 @@ fun EinstellungenSeite(oeffnen: (Ziel) -> Unit) {
     var ordnerDialog by remember { mutableStateOf(false) }
     var syncLaeuft by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
-    val akkuFrei = ctx.getSystemService(PowerManager::class.java).isIgnoringBatteryOptimizations(ctx.packageName)
+    val akkuFrei = Freigaben.akkuFrei(ctx)
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = 32.dp)) {
         AppLeiste()
@@ -136,7 +134,7 @@ fun EinstellungenSeite(oeffnen: (Ziel) -> Unit) {
             }
             Schalter(stringResource(R.string.nur_wlan), stringResource(R.string.nur_wlan_text), e.nurWlan) { e.nurWlan = it; AutoSync.planen(ctx) }
             Zeile(stringResource(R.string.akku), if (akkuFrei) stringResource(R.string.akku_aus) else stringResource(R.string.akku_an)) {
-                if (!akkuFrei) ctx.startActivity(Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:${ctx.packageName}")))
+                if (!akkuFrei) Freigaben.akkuFreigeben(ctx)
             }
         }
 
@@ -175,9 +173,10 @@ fun EinstellungenSeite(oeffnen: (Ziel) -> Unit) {
         }
 
         Gruppe(stringResource(R.string.hilfe)) {
+            Zeile(stringResource(R.string.einrichtung), stringResource(R.string.einrichtung_text)) { e.einrichtungFertig = false }
             Zeile(stringResource(R.string.protokoll), stringResource(R.string.protokoll_text)) { oeffnen(Ziel.ProtokollAnsicht) }
             Zeile(stringResource(R.string.original), stringResource(R.string.original_text)) {
-                ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/phoenixthrush/AniWorld-Downloader")))
+                runCatching { ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/phoenixthrush/AniWorld-Downloader"))) }
             }
             Zeile(stringResource(R.string.version), stringResource(R.string.version_text, BuildConfig.VERSION_NAME))
         }

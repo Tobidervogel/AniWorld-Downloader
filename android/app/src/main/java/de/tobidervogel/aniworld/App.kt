@@ -8,6 +8,7 @@ import android.content.Intent
 import android.webkit.CookieManager
 import androidx.annotation.StringRes
 import androidx.core.app.NotificationCompat
+import androidx.work.Configuration
 import coil.ImageLoader
 import coil.ImageLoaderFactory
 import de.tobidervogel.aniworld.download.AutoSync
@@ -30,7 +31,13 @@ import de.tobidervogel.aniworld.site.SerienStream
 fun tr(@StringRes id: Int, vararg args: Any): String =
     if (App.bereit) App.self.getString(id, *args) else "#$id ${args.joinToString(" ")}".trim()
 
-class App : Application(), ImageLoaderFactory {
+/**
+ * WorkManager (Auto-Sync) startet hier bei Bedarf statt über seinen Start-Provider: So ist er auch
+ * dann bereit, wenn onCreate ihn schon braucht (Robolectric, Neustart in einem anderen Prozess).
+ */
+class App : Application(), ImageLoaderFactory, Configuration.Provider {
+    override val workManagerConfiguration: Configuration get() = Configuration.Builder().build()
+
     lateinit var einstellungen: Einstellungen
     lateinit var netz: Netz
     lateinit var aniworld: AniWorld

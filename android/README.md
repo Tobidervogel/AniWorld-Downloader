@@ -38,11 +38,12 @@ Movies/AniWorld/Filme/<Title (Year)>.mp4          ← single movies (Filmo, Film
 Requires Android 8 or newer.
 
 1. Install the APK (allow installing from unknown sources once).
-2. Allow notifications on first start (Android 13 and newer ask); otherwise running downloads are invisible.
-3. **Settings → Storage access**: allow it, otherwise files end up in `Android/media/<package>/`.
-   From Android 11 on this opens “All files access”, before that it is the normal storage permission.
-4. **Settings → Battery optimization**: turn it off. Many vendors (OnePlus, Xiaomi, Samsung) kill long
-   background downloads otherwise.
+2. On first start a short setup explains and asks for each permission; every step can be skipped and
+   repeated later under **Settings → Help → Setup**:
+   - **Notifications** (Android 13 and newer ask), otherwise running downloads are invisible.
+   - **Storage access**, otherwise files end up in `Android/media/<package>/`. From Android 11 on this is
+     “All files access”, before that the normal storage permission.
+   - **Battery optimization** off. Many vendors (OnePlus, Xiaomi, Samsung) kill long background downloads otherwise.
 
 Protection pages (DDoS-Guard, Cloudflare, Kinox' verification) are handled in a visible browser window:
 if a challenge shows up, solve it once and the app continues with the same cookies. The app never tries to
@@ -105,3 +106,5 @@ new hosters implement `hoster/Hoster.kt`. UI texts live in `res/values/strings.x
 
 App code under the project's license. Inter: SIL Open Font License (`lizenzen/Inter-OFL.txt`).
 Flags from [flag-icons](https://github.com/lipis/flag-icons): MIT (`lizenzen/flag-icons-MIT.txt`).
+The site icons in `res/drawable-nodpi/logo_*.png` are the sites' own favicons, used only to tell the sites apart;
+they belong to their respective owners.

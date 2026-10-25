@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import android.os.Build
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -73,7 +74,6 @@ import de.tobidervogel.aniworld.Protokoll
 import de.tobidervogel.aniworld.R
 import de.tobidervogel.aniworld.download.Status
 import de.tobidervogel.aniworld.net.Netz
-import de.tobidervogel.aniworld.site.MegaKinoParser
 import de.tobidervogel.aniworld.site.Sprache
 import de.tobidervogel.aniworld.site.StaffelRef
 import kotlinx.coroutines.CancellationException
@@ -396,34 +396,33 @@ fun SprachPille(s: Sprache, gewaehlt: Boolean, aktiv: Boolean = true, zahl: Stri
 
 // ------------------------------------------------------------ Seiten
 
-/** Logo-Adressen direkt von den Seiten; bis es geladen ist, ein Kürzel in der Seitenfarbe. */
-fun seitenLogo(seite: String) = when (seite) {
-    "SerienStream" -> "https://serienstream.to/apple-touch-icon.png"
-    "Filmo" -> "https://filmo.to/apple-touch-icon.png"
-    "FilmPalast" -> "https://filmpalast.to/favicon.ico"
-    "BurningSeries" -> "https://bs.cine.to/favicon.ico"
-    "Kinox" -> "https://kinox.to/favicon.ico"
-    "MegaKino" -> "https://${MegaKinoParser.STANDARD}/favicon.ico"
-    "Moflix" -> "https://moflix-stream.xyz/favicon/icon-192x192.png"
-    else -> "https://aniworld.to/favicon.ico"
+/**
+ * Die Icons der Seiten liegen in der App (res/drawable-nodpi, von den Seiten selbst, Stand 25.10.2026).
+ * Aus dem Netz geladen fehlten sie, sobald eine Seite DDoS-Guard oder Cloudflare vorschaltet.
+ */
+@DrawableRes
+fun seitenLogo(seite: String): Int? = when (seite) {
+    "AniWorld" -> R.drawable.logo_aniworld
+    "SerienStream" -> R.drawable.logo_serienstream
+    "Filmo" -> R.drawable.logo_filmo
+    "FilmPalast" -> R.drawable.logo_filmpalast
+    "BurningSeries" -> R.drawable.logo_burningseries
+    "Kinox" -> R.drawable.logo_kinox
+    "MegaKino" -> R.drawable.logo_megakino
+    "Moflix" -> R.drawable.logo_moflix
+    else -> null
 }
 
+/** Logo einer Seite; für eine unbekannte Seite ein Kürzel in ihrer Farbe. */
 @Composable
 fun SeitenLogo(seite: String, groesse: Dp = 20.dp) {
-    val ctx = LocalContext.current
-    var geladen by remember(seite) { mutableStateOf(false) }
-    Box(
-        Modifier.size(groesse).clip(RoundedCornerShape(groesse / 4)).background(Seitenfarbe.verlauf(seite)),
-        contentAlignment = Alignment.Center,
-    ) {
-        if (!geladen) Text(seite.take(1), color = Color.White, fontWeight = FontWeight.Bold, fontFamily = Inter, fontSize = (groesse.value * 0.55f).sp)
-        AsyncImage(
-            model = ImageRequest.Builder(ctx).data(seitenLogo(seite)).build(),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            onSuccess = { geladen = true },
-            modifier = Modifier.fillMaxSize(),
-        )
+    val logo = seitenLogo(seite)
+    if (logo != null) {
+        Image(painterResource(logo), null, Modifier.size(groesse).clip(RoundedCornerShape(groesse / 4)), contentScale = ContentScale.Fit)
+        return
+    }
+    Box(Modifier.size(groesse).clip(RoundedCornerShape(groesse / 4)).background(Seitenfarbe.verlauf(seite)), contentAlignment = Alignment.Center) {
+        Text(seite.take(1), color = Color.White, fontWeight = FontWeight.Bold, fontFamily = Inter, fontSize = (groesse.value * 0.55f).sp)
     }
 }
 

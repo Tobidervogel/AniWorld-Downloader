@@ -260,4 +260,20 @@
         <item quantity="one">%d Serie nicht erreichbar</item>
         <item quantity="other">%d Serien nicht erreichbar</item>
     </plurals>
+    <string name="einrichtung">Einrichtung</string>
+    <string name="einrichtung_text">Berechtigungen noch einmal Schritt für Schritt durchgehen</string>
+    <string name="einrichtung_willkommen">Willkommen bei AniApp</string>
+    <string name="einrichtung_willkommen_text">Animes, Serien und Filme von acht Seiten streamen und herunterladen. Vorher kurz einrichten, das dauert etwa eine Minute.</string>
+    <string name="einrichtung_los">Los geht’s</string>
+    <string name="einrichtung_benachrichtigungen">Benachrichtigungen</string>
+    <string name="einrichtung_benachrichtigungen_text">Damit du siehst, wie weit deine Downloads sind, und erfährst, wenn Auto-Sync neue Folgen eingereiht hat.</string>
+    <string name="einrichtung_speicher_text">Folgen landen in %1$s, wo Galerie und andere Player sie finden. Ohne Zugriff bleiben sie im App-Ordner unter Android/media.</string>
+    <string name="einrichtung_akku_text">Viele Handys beenden lange Downloads im Hintergrund. Schalte die Akku-Optimierung für AniApp aus, damit ganze Staffeln durchlaufen.</string>
+    <string name="einrichtung_fertig">Alles bereit</string>
+    <string name="einrichtung_fertig_text">Wähle die Sprache für neue Downloads. Alles lässt sich später in den Einstellungen ändern.</string>
+    <string name="einrichtung_autosync_text">Neu erschienene Folgen von Serien aus der Bibliothek einreihen</string>
+    <string name="einrichtung_oeffnen">AniApp öffnen</string>
+    <string name="einrichtung_erlauben">Erlauben</string>
+    <string name="einrichtung_spaeter">Später</string>
+    <string name="einrichtung_weiter">Weiter</string>
 </resources>
