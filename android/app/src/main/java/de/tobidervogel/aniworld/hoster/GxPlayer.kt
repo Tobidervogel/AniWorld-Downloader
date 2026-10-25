@@ -27,6 +27,6 @@ object GxPlayer : Hoster {
         val seite = netz.anfrage(embed, kopf)
         if (!seite.ok) throw NetzFehler(tr(R.string.e_http, name, seite.code))
         val url = ausHtml(seite.text) ?: throw NetzFehler(tr(R.string.e_keine_quelle, name))
-        return Stream(url, kopf + ("Referer" to Js.ursprung(seite.url) + "/"), name)
+        return Stream(url, kopf + ("Referer" to Js.ursprung(seite.url) + "/"), name, hls = true)
     }
 }

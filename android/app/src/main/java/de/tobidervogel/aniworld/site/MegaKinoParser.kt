@@ -3,7 +3,6 @@ package de.tobidervogel.aniworld.site
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
-import java.net.URI
 
 /**
  * Liest MegaKino, wie models/megakino/series.py und query_megakino() im Original.
@@ -29,17 +28,6 @@ object MegaKinoParser {
 
     /** Oberbegriffe in der Genrezeile („Filme / Thriller“), die kein Genre sind. */
     private val KEIN_GENRE = setOf("filme", "serien", "kinofilme")
-
-    /** Wie _ALIASES in models/common/provider_map.py, dazu der eigene Player der Seite. */
-    private val HOSTER = listOf(
-        "voe" to "VOE",
-        "dood" to "Doodstream",
-        "vidmoly" to "Vidmoly",
-        "vidoza" to "Vidoza",
-        "vidara" to "Vidara",
-        "filemoon" to "Filemoon",
-        "gxplayer" to "GXPlayer",
-    )
 
     fun istHost(host: String) = HOST.matches(host)
 
@@ -186,7 +174,7 @@ object MegaKinoParser {
         val hoster = LinkedHashMap<String, String>()
         for (o in auswahl.select("option[value]")) {
             val url = o.attr("value").trim().takeIf { it.startsWith("http") } ?: continue
-            val name = hosterName(url) ?: o.text().trim().takeIf { it.isNotEmpty() } ?: continue
+            val name = HosterNamen.ausAdresse(url) ?: o.text().trim().takeIf { it.isNotEmpty() } ?: continue
             hoster.putIfAbsent(name, url)
         }
         return hoster
@@ -199,18 +187,9 @@ object MegaKinoParser {
             val roh = iframe.attr("src").ifEmpty { iframe.attr("data-src") }.trim()
             val url = if (roh.startsWith("//")) "https:$roh" else roh
             if (!url.startsWith("http") || "youtube." in url || "youtu.be" in url) continue
-            hoster.putIfAbsent(hosterName(url) ?: continue, url)
+            hoster.putIfAbsent(HosterNamen.ausAdresse(url) ?: continue, url)
         }
         return hoster
-    }
-
-    /** Name eines Hosters aus seiner Adresse: bekannte wie im Original, sonst nach der Domain. */
-    fun hosterName(url: String): String? {
-        val host = runCatching { URI(url).host }.getOrNull()?.lowercase()?.removePrefix("www.") ?: return null
-        HOSTER.firstOrNull { it.first in host }?.let { return it.second }
-        val teile = host.split('.').filter { it.isNotEmpty() }
-        val kern = if (teile.size >= 2) teile[teile.size - 2] else teile.firstOrNull() ?: return null
-        return kern.replaceFirstChar { it.uppercase() }
     }
 
     /** Hoster der Folge (Serie) oder des Films. Die Links zeigen schon direkt auf den Hoster. */

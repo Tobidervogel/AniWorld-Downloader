@@ -2,13 +2,17 @@ package de.tobidervogel.aniworld.hoster
 
 import de.tobidervogel.aniworld.net.Netz
 
-/** Eine abspielbare Adresse samt den Kopfzeilen, die der Hoster beim Laden erwartet. */
+/**
+ * Eine abspielbare Adresse samt den Kopfzeilen, die der Hoster beim Laden erwartet.
+ * @param hls der Extraktor weiß sicher, dass es eine Playlist ist (auch ohne .m3u8 in der Adresse)
+ */
 data class Stream(
     val url: String,
     val header: Map<String, String>,
     val hoster: String,
+    val hls: Boolean = false,
 ) {
-    val istHls get() = istHls(url)
+    val istHls get() = hls || istHls(url)
 
     companion object {
         /** HLS erkennt man an „.m3u8“; GXPlayer liefert die Playlist als `/m3u8/…/master.txt`. */
@@ -22,7 +26,7 @@ interface Hoster {
 }
 
 object Hosters {
-    val alle: List<Hoster> = listOf(Voe, Filemoon, Doodstream, Vidmoly, Vidoza, GxPlayer)
+    val alle: List<Hoster> = listOf(Voe, Filemoon, Doodstream, Vidmoly, Vidoza, GxPlayer, MoflixClick)
 
     // Wie _ALIASES in models/common/provider_map.py: Teilstring im Namen oder in der Adresse.
     private val aliase = listOf(
@@ -33,6 +37,8 @@ object Hosters {
         "filemoon" to Filemoon,
         "byse" to Filemoon,
         "gxplayer" to GxPlayer,
+        "moflix-stream.click" to MoflixClick,
+        "moflixclick" to MoflixClick,
     )
 
     fun fuer(name: String): Hoster? {

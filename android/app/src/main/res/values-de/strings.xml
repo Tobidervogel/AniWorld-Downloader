@@ -213,6 +213,7 @@
     <string name="e_bs_folge">BurningSeries: Folgenadresse unbekannt</string>
     <string name="e_bs_vpn">Burning Series zeigt statt des Players einen VPN-Hinweis. Anderen Hoster oder ein VPN versuchen.</string>
     <string name="reihe_kinofilme">Kinofilme</string>
+    <string name="reihe_top10">Top 10 Filme &amp; Serien</string>
     <string name="e_kinox_check">Kinox verlangt eine Bestätigung im Browser. Bitte nochmal versuchen.</string>
     <plurals name="folgen_eingereiht">
         <item quantity="one">%d Folge eingereiht</item>

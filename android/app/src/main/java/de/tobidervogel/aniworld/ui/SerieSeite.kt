@@ -627,7 +627,7 @@ private fun FolgenBlatt(s: Serie, f: Folge, seriensprache: Sprache, auftraege: L
                     try {
                         val st = Aufloeser.stream(f.url, l, sprache, hoster) { status = it }
                         status = null
-                        PlayerActivity.starten(ctx, st.url, f.anzeige(s), st.header, f.url, f.info(s), sprache)
+                        PlayerActivity.starten(ctx, st.url, f.anzeige(s), st.header, f.url, f.info(s), sprache, hls = st.istHls)
                     } catch (e: CancellationException) {
                         throw e
                     } catch (e: Exception) {

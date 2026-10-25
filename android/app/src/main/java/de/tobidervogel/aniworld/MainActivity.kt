@@ -103,10 +103,10 @@ class MainActivity : ComponentActivity() {
             Intent.ACTION_SEND -> i.getStringExtra(Intent.EXTRA_TEXT)
             else -> null
         } ?: return
-        val link = Regex("""https?://(?:www\.)?(?:aniworld\.to/anime/stream|serienstream\.(?:to|cx)/serie|s\.to/serie|filmo\.to/movies|filmpalast\.to/stream|(?:bs\.cine\.to|bs\.to|burning-?series\.(?:io|net|ac|cx))/serie|kino[xsz]\.(?:to|am|click)/Stream|megakino[a-z0-9-]*\.[a-z]{2,}/[a-z0-9-]+)/[^\s"']+""")
+        val link = Regex("""https?://(?:www\.)?(?:aniworld\.to/anime/stream|serienstream\.(?:to|cx)/serie|s\.to/serie|filmo\.to/movies|filmpalast\.to/stream|(?:bs\.cine\.to|bs\.to|burning-?series\.(?:io|net|ac|cx))/serie|kino[xsz]\.(?:to|am|click)/Stream|megakino[a-z0-9-]*\.[a-z]{2,}/[a-z0-9-]+|moflix-stream\.xyz/titles)/[^\s"']+""")
             .find(text)?.value ?: return
         val serie = App.self.anbieter(link).serienUrl(link) ?: return
-        val staffel = Regex("staffel-(\\d+)").find(link)?.groupValues?.get(1)?.toIntOrNull()
+        val staffel = Regex("(?:staffel-|/season/)(\\d+)").find(link)?.groupValues?.get(1)?.toIntOrNull()
         tab = TAB_START
         stapel.clear()
         stapel += Ziel.Serie(serie, titelAusAdresse(serie), null, staffel)

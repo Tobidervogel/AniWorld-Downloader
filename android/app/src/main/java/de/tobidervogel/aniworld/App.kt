@@ -19,6 +19,7 @@ import de.tobidervogel.aniworld.site.FilmPalast
 import de.tobidervogel.aniworld.site.Filmo
 import de.tobidervogel.aniworld.site.Kinox
 import de.tobidervogel.aniworld.site.MegaKino
+import de.tobidervogel.aniworld.site.Moflix
 import de.tobidervogel.aniworld.site.SerienStream
 
 /**
@@ -38,9 +39,10 @@ class App : Application(), ImageLoaderFactory {
     lateinit var burningseries: BurningSeries
     lateinit var kinox: Kinox
     lateinit var megakino: MegaKino
+    lateinit var moflix: Moflix
     lateinit var db: Datenbank
 
-    val anbieter: List<Anbieter> get() = listOf(aniworld, serienstream, burningseries, kinox, megakino, filmo, filmpalast)
+    val anbieter: List<Anbieter> get() = listOf(aniworld, serienstream, burningseries, kinox, megakino, moflix, filmo, filmpalast)
 
     /** Zuständige Seite für eine Adresse; unbekannte Adressen gehen an AniWorld. */
     fun anbieter(url: String): Anbieter = anbieter.firstOrNull { it.passt(url) } ?: aniworld
@@ -60,6 +62,7 @@ class App : Application(), ImageLoaderFactory {
         burningseries = BurningSeries(netz)
         kinox = Kinox(netz)
         megakino = MegaKino(netz)
+        moflix = Moflix(netz)
         db = Datenbank(this)
 
         val nm = getSystemService(NotificationManager::class.java)

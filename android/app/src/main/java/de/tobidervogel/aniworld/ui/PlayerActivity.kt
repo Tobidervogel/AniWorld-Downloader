@@ -136,10 +136,12 @@ class PlayerActivity : ComponentActivity() {
         val werte = intent.getStringArrayExtra(EXTRA_KOPF_WERTE).orEmpty()
         val kopf = namen.zip(werte).toMap()
         abspielen(uri, intent.getStringExtra(EXTRA_TITEL).orEmpty(), kopf, intent.getStringExtra(EXTRA_SCHLUESSEL).orEmpty(), info(intent),
-            intent.getStringExtra(EXTRA_TON))
+            intent.getStringExtra(EXTRA_TON), intent.getBooleanExtra(EXTRA_HLS, false))
     }
 
-    private fun abspielen(uri: String, titel: String, kopf: Map<String, String>, schluessel: String, info: Folgeninfo?, ton: String? = null) {
+    private fun abspielen(
+        uri: String, titel: String, kopf: Map<String, String>, schluessel: String, info: Folgeninfo?, ton: String? = null, hls: Boolean = false,
+    ) {
         player?.release()
         this.schluessel = schluessel
         titelText.text = titel
@@ -170,7 +172,7 @@ class PlayerActivity : ComponentActivity() {
 
         val ziel = if (uri.startsWith("/")) Uri.fromFile(File(uri)) else Uri.parse(uri)
         val item = MediaItem.Builder().setUri(ziel)
-        if (Stream.istHls(uri)) item.setMimeType(MimeTypes.APPLICATION_M3U8)
+        if (hls || Stream.istHls(uri)) item.setMimeType(MimeTypes.APPLICATION_M3U8)
         p.setMediaItem(item.build())
 
         app.db.position(schluessel)?.let { (ms, dauer) ->
@@ -279,6 +281,7 @@ class PlayerActivity : ComponentActivity() {
 
     companion object {
         private const val EXTRA_URI = "uri"
+        private const val EXTRA_HLS = "hls"
         private const val EXTRA_TITEL = "titel"
         private const val EXTRA_SCHLUESSEL = "schluessel"
         private const val EXTRA_KOPF_NAMEN = "kopfNamen"
@@ -300,13 +303,15 @@ class PlayerActivity : ComponentActivity() {
         /**
          * @param uri  Pfad einer geladenen Datei oder eine Stream-Adresse
          * @param info Serie/Staffel/Folge für die AniSkip-Zeiten (null: ohne)
+         * @param hls  Stream ist sicher eine Playlist (siehe [Stream.hls])
          */
         fun starten(
             ctx: Context, uri: String, titel: String, kopf: Map<String, String>, schluessel: String, info: Folgeninfo?,
-            sprache: Sprache? = null,
+            sprache: Sprache? = null, hls: Boolean = false,
         ) {
             val i = Intent(ctx, PlayerActivity::class.java)
                 .putExtra(EXTRA_URI, uri)
+                .putExtra(EXTRA_HLS, hls)
                 .putExtra(EXTRA_TITEL, titel)
                 .putExtra(EXTRA_SCHLUESSEL, schluessel)
                 .putExtra(EXTRA_KOPF_NAMEN, kopf.keys.toTypedArray())
