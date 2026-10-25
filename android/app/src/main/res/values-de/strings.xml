@@ -209,6 +209,9 @@
     <string name="e_unvollstaendig">Download unvollständig (%1$d von %2$d KB)</string>
     <string name="reihe_neue_filme">Neue Filme</string>
     <string name="reihe_top">Top-Filme</string>
+    <string name="reihe_neue_serien">Neue Serien</string>
+    <string name="e_bs_folge">BurningSeries: Folgenadresse unbekannt</string>
+    <string name="e_bs_vpn">Burning Series zeigt statt des Players einen VPN-Hinweis. Anderen Hoster oder ein VPN versuchen.</string>
     <plurals name="folgen_eingereiht">
         <item quantity="one">%d Folge eingereiht</item>
         <item quantity="other">%d Folgen eingereiht</item>

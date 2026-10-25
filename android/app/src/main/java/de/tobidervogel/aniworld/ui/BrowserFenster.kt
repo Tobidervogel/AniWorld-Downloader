@@ -30,6 +30,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import de.tobidervogel.aniworld.App
 import de.tobidervogel.aniworld.R
+import de.tobidervogel.aniworld.hoster.Hosters
 import de.tobidervogel.aniworld.net.BrowserCheck
 import de.tobidervogel.aniworld.net.Check
 import de.tobidervogel.aniworld.net.Netz
@@ -107,7 +108,19 @@ fun BrowserFenster() {
     // Regelmäßig nachsehen, ob die Schutzseite weg ist.
     LaunchedEffect(a, web) {
         val w = web ?: return@LaunchedEffect
-        if (a.verlassen) return@LaunchedEffect
+        if (a.verlassen) {
+            // Manche Seiten (Burning Series) leiten nicht weiter, sondern betten den Hoster nach der
+            // Prüfung als iframe ein. Dann gilt dessen Adresse als Ziel.
+            delay(2_000)
+            while (!a.ergebnis.isCompleted) {
+                w.evaluateJavascript(IFRAMES) { r ->
+                    val srcs = runCatching { JSONArray("[$r]").getString(0) }.getOrNull().orEmpty().lines()
+                    srcs.firstOrNull { istPlayer(it, a.heim) }?.let { fertig(it) }
+                }
+                delay(1_500)
+            }
+            return@LaunchedEffect
+        }
         delay(1_500)
         while (!a.ergebnis.isCompleted) {
             w.evaluateJavascript("document.documentElement.outerHTML.substring(0, 6000)") { r ->
@@ -125,4 +138,17 @@ fun BrowserFenster() {
             web?.destroy()
         }
     }
+}
+
+private const val IFRAMES = "Array.from(document.querySelectorAll('iframe')).map(function(f){return f.src}).join('\\n')"
+
+/** Fremde Prüf- und Werbe-Frames, die nie der Hoster sind. */
+private val KEIN_PLAYER = listOf("challenges.cloudflare.com", "google", "facebook", "recaptcha", "hcaptcha", "doubleclick", "twitter")
+
+/** Ein eingebetteter Hoster: eigene Domain, bekannter Hoster oder typische Player-Adresse (/e/, /embed, /v/). */
+private fun istPlayer(url: String, heim: Set<String>): Boolean {
+    if (!Netz.istWeb(url)) return false
+    val host = Netz.host(url).removePrefix("www.")
+    if (host in heim || KEIN_PLAYER.any { it in host }) return false
+    return Hosters.fuer(url) != null || Regex("""/(e|v|embed)/""").containsMatchIn(url)
 }

@@ -49,8 +49,9 @@ data class NeueFolge(
 
 data class Treffer(val titel: String, val url: String, val beschreibung: String, val cover: String? = null)
 
-data class StaffelRef(val nummer: Int, val url: String, val istFilme: Boolean) {
-    val name get() = if (istFilme) "Filme" else "Staffel $nummer"
+/** @param bezeichnung eigener Name der Seite, z. B. „Specials“ für Staffel 0 bei Burning Series */
+data class StaffelRef(val nummer: Int, val url: String, val istFilme: Boolean, val bezeichnung: String? = null) {
+    val name get() = bezeichnung ?: if (istFilme) "Filme" else "Staffel $nummer"
 }
 
 data class Serie(

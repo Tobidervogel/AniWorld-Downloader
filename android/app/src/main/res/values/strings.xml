@@ -211,6 +211,9 @@
     <string name="e_unvollstaendig">Download incomplete (%1$d of %2$d KB)</string>
     <string name="reihe_neue_filme">New movies</string>
     <string name="reihe_top">Top movies</string>
+    <string name="reihe_neue_serien">New series</string>
+    <string name="e_bs_folge">BurningSeries: unknown episode address</string>
+    <string name="e_bs_vpn">Burning Series shows a VPN notice instead of the player. Try another hoster or a VPN.</string>
     <plurals name="folgen_eingereiht">
         <item quantity="one">%d episode queued</item>
         <item quantity="other">%d episodes queued</item>

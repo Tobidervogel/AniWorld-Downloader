@@ -15,9 +15,9 @@ class FilmPalast(private val netz: Netz) : Anbieter {
 
     override fun serienUrl(url: String) = FilmPalastParser.filmUrl(url)
 
-    // Die Seite liefert sonst Brotli, das OkHttp ohne Zusatzmodul nicht entpackt.
-    private suspend fun html(url: String) =
-        netz.seite(url, header = mapOf("Accept-Encoding" to "gzip, deflate", "Referer" to "$BASIS/")).text
+    // Kein eigenes Accept-Encoding setzen: Dann fragt OkHttp selbst nach gzip und entpackt auch.
+    // (Das Original muss Brotli abwählen; OkHttp bietet es gar nicht erst an.)
+    private suspend fun html(url: String) = netz.seite(url, header = mapOf("Referer" to "$BASIS/")).text
 
     private suspend fun filmHtml(url: String, neu: Boolean = false): String {
         if (!neu) filme[url]?.let { return it }

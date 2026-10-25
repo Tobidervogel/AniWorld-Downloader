@@ -219,7 +219,7 @@ fun Sprache.anzeige(): String = stringResource(anzeigeRes)
 
 /** „Staffel 2“ oder „Filme“ in der Sprache des Handys. */
 @Composable
-fun StaffelRef.anzeige(): String = if (istFilme) stringResource(R.string.filme) else stringResource(R.string.staffel_n, nummer)
+fun StaffelRef.anzeige(): String = bezeichnung ?: if (istFilme) stringResource(R.string.filme) else stringResource(R.string.staffel_n, nummer)
 
 // ------------------------------------------------------------ Knöpfe
 
@@ -380,6 +380,7 @@ fun seitenLogo(seite: String) = when (seite) {
     "SerienStream" -> "https://serienstream.to/apple-touch-icon.png"
     "Filmo" -> "https://filmo.to/apple-touch-icon.png"
     "FilmPalast" -> "https://filmpalast.to/favicon.ico"
+    "BurningSeries" -> "https://bs.cine.to/favicon.ico"
     else -> "https://aniworld.to/favicon.ico"
 }
 
