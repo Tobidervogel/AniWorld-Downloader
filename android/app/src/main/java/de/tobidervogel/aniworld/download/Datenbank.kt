@@ -39,7 +39,7 @@ data class Auftrag(
     val kuerzel get() = if (istFilm) "Film $folge" else "S%02dE%02d".format(staffel, folge)
     val folgeninfo get() = Folgeninfo(serieUrl, serie, staffel, folge, istFilm)
     /** Film ohne Reihe (Filmo, FilmPalast): „Serie“ und einzige Folge sind derselbe Film. */
-    val einzelfilm get() = Einzelfilm.ist(serieUrl)
+    val einzelfilm get() = Einzelfilm.ist(serieUrl, istFilm, staffel)
     /** Name für Player und Listen: „Serie · S01E05“, beim Einzelfilm nur der Titel. */
     val anzeige get() = if (einzelfilm) titel.ifBlank { serie } else "$serie · $kuerzel"
 }

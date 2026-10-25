@@ -214,6 +214,8 @@
     <string name="reihe_neue_serien">New series</string>
     <string name="e_bs_folge">BurningSeries: unknown episode address</string>
     <string name="e_bs_vpn">Burning Series shows a VPN notice instead of the player. Try another hoster or a VPN.</string>
+    <string name="reihe_kinofilme">In cinemas</string>
+    <string name="e_kinox_check">Kinox wants a verification in the browser. Please try again.</string>
     <plurals name="folgen_eingereiht">
         <item quantity="one">%d episode queued</item>
         <item quantity="other">%d episodes queued</item>

@@ -381,6 +381,7 @@ fun seitenLogo(seite: String) = when (seite) {
     "Filmo" -> "https://filmo.to/apple-touch-icon.png"
     "FilmPalast" -> "https://filmpalast.to/favicon.ico"
     "BurningSeries" -> "https://bs.cine.to/favicon.ico"
+    "Kinox" -> "https://kinox.to/favicon.ico"
     else -> "https://aniworld.to/favicon.ico"
 }
 
