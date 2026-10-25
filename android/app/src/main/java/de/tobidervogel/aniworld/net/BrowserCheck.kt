@@ -15,7 +15,10 @@ import kotlin.coroutines.coroutineContext
  * Markiert Abrufe im Hintergrund (Auto-Sync): Dort öffnet sich kein Browserfenster, eine
  * Prüfseite gilt sofort als nicht bestanden. Sonst hinge der Lauf bis zu zehn Minuten.
  */
-object StillerAbruf : AbstractCoroutineContextElement(StillerAbruf), CoroutineContext.Key<StillerAbruf>
+object StillerAbruf : AbstractCoroutineContextElement(Schluessel) {
+    // Eigener Schlüssel: Ein Objekt, das sich selbst als Schlüssel übergibt, ist beim Anlegen noch null.
+    object Schluessel : CoroutineContext.Key<StillerAbruf>
+}
 
 /**
  * Vermittelt zwischen Netz (merkt, dass eine Schutzseite kommt) und Oberfläche (zeigt das
@@ -42,7 +45,7 @@ object BrowserCheck {
 
     /** Liefert die Endadresse nach bestandener Prüfung, sonst null (abgebrochen, Zeit um). */
     suspend fun loesen(url: String, verlassen: Boolean = false, heim: Set<String> = emptySet()): String? {
-        if (coroutineContext[StillerAbruf] != null) return null
+        if (coroutineContext[StillerAbruf.Schluessel] != null) return null
         return loesenSichtbar(url, verlassen, heim)
     }
 
