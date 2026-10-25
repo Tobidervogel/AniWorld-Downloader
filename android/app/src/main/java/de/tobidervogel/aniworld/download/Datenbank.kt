@@ -5,7 +5,7 @@ import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
-import de.tobidervogel.aniworld.site.FilmoParser
+import de.tobidervogel.aniworld.site.Einzelfilm
 import de.tobidervogel.aniworld.site.Folgeninfo
 import de.tobidervogel.aniworld.site.Sprache
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,8 +38,8 @@ data class Auftrag(
 ) {
     val kuerzel get() = if (istFilm) "Film $folge" else "S%02dE%02d".format(staffel, folge)
     val folgeninfo get() = Folgeninfo(serieUrl, serie, staffel, folge, istFilm)
-    /** Film ohne Reihe (Filmo): „Serie“ und einzige Folge sind derselbe Film. */
-    val einzelfilm get() = FilmoParser.filmUrl(serieUrl) != null
+    /** Film ohne Reihe (Filmo, FilmPalast): „Serie“ und einzige Folge sind derselbe Film. */
+    val einzelfilm get() = Einzelfilm.ist(serieUrl)
     /** Name für Player und Listen: „Serie · S01E05“, beim Einzelfilm nur der Titel. */
     val anzeige get() = if (einzelfilm) titel.ifBlank { serie } else "$serie · $kuerzel"
 }

@@ -73,7 +73,7 @@ import de.tobidervogel.aniworld.download.DownloadService
 import de.tobidervogel.aniworld.download.Live
 import de.tobidervogel.aniworld.download.Status
 import de.tobidervogel.aniworld.hoster.Aufloeser
-import de.tobidervogel.aniworld.site.FilmoParser
+import de.tobidervogel.aniworld.site.Einzelfilm
 import de.tobidervogel.aniworld.site.Folge
 import de.tobidervogel.aniworld.site.FolgenLinks
 import de.tobidervogel.aniworld.site.Folgeninfo
@@ -155,7 +155,7 @@ fun SerieSeite(ziel: Ziel.Serie, zurueck: () -> Unit) {
         ?: app.einstellungen.sprache.takeIf { it in vorhanden }
         ?: Sprache.entries.firstOrNull { it in vorhanden }
         ?: app.einstellungen.sprache
-    val einzelfilm = s != null && FilmoParser.filmUrl(s.url) != null
+    val einzelfilm = s != null && Einzelfilm.ist(s.url)
 
     fun herunterladen(auswahlListe: List<Folge>) {
         val ser = s ?: return
@@ -510,7 +510,7 @@ private fun FilmAktionen(
 private fun Folge.info(s: Serie) = Folgeninfo(s.url, s.titel, staffel, nummer, istFilm)
 
 /** Titel für den Player: „Serie · S01E05“, beim Einzelfilm nur der Film. */
-private fun Folge.anzeige(s: Serie) = if (FilmoParser.filmUrl(s.url) != null) titel.ifBlank { s.titel } else "${s.titel} · $kuerzel"
+private fun Folge.anzeige(s: Serie) = if (Einzelfilm.ist(s.url)) titel.ifBlank { s.titel } else "${s.titel} · $kuerzel"
 
 /**
  * Reiht Folgen ein und startet den Dienst. Die Stellen der Folgennummer kommen aus der ganzen
@@ -575,7 +575,7 @@ private fun FolgenBlatt(s: Serie, f: Folge, seriensprache: Sprache, auftraege: L
     }
 
     Blatt(schliessen) {
-        if (!f.istFilm || FilmoParser.filmUrl(s.url) == null) Text(f.kuerzel, color = Farbe.link, style = MaterialTheme.typography.labelLarge)
+        if (!f.istFilm || !Einzelfilm.ist(s.url)) Text(f.kuerzel, color = Farbe.link, style = MaterialTheme.typography.labelLarge)
         Text(f.titel.ifBlank { f.kuerzel }, style = MaterialTheme.typography.titleLarge, color = Farbe.textStark)
         if (f.titelEn.isNotBlank() && f.titelEn != f.titel) Text(f.titelEn, color = Farbe.text3, style = MaterialTheme.typography.bodyMedium)
 

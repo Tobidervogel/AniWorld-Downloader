@@ -20,6 +20,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -35,6 +38,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -375,6 +379,7 @@ fun SprachPille(s: Sprache, gewaehlt: Boolean, aktiv: Boolean = true, zahl: Stri
 fun seitenLogo(seite: String) = when (seite) {
     "SerienStream" -> "https://serienstream.to/apple-touch-icon.png"
     "Filmo" -> "https://filmo.to/apple-touch-icon.png"
+    "FilmPalast" -> "https://filmpalast.to/favicon.ico"
     else -> "https://aniworld.to/favicon.ico"
 }
 
@@ -398,29 +403,36 @@ fun SeitenLogo(seite: String, groesse: Dp = 20.dp) {
 }
 
 /**
- * Seitenumschalter wie .segmented in der Web-UI: gemeinsame Fläche, die gewählte Seite in
- * ihrer eigenen Farbe (AniWorld violett, SerienStream blau, Filmo magenta).
+ * Seitenumschalter wie .segmented in der Web-UI: gemeinsame Fläche, die gewählte Seite in ihrer
+ * eigenen Farbe. Mit mehr Seiten als Platz lässt er sich seitlich wischen und rückt die gewählte ins Bild.
  */
 @Composable
 fun SeitenUmschalter(seiten: List<String>, gewaehlt: String, modifier: Modifier = Modifier, waehlen: (String) -> Unit) {
-    Row(modifier.fillMaxWidth().karte().padding(6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        seiten.forEach { s ->
+    val liste = rememberLazyListState()
+    LaunchedEffect(gewaehlt) {
+        val i = seiten.indexOf(gewaehlt)
+        if (i >= 0) liste.animateScrollToItem(maxOf(0, i - 1))
+    }
+    LazyRow(
+        modifier.fillMaxWidth().karte(),
+        state = liste,
+        contentPadding = PaddingValues(6.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        items(seiten, key = { it }) { s ->
             val aktiv = s == gewaehlt
             val farben = Seitenfarbe.farben(s)
             Row(
                 Modifier
-                    // Breite nach Namenslänge, damit „SerienStream“ neben „Filmo“ ganz lesbar bleibt.
-                    .weight(s.length + 4f)
                     .then(if (aktiv) Modifier.shadow(8.dp, RoundedCornerShape(9.dp), ambientColor = farben[0], spotColor = farben[0]) else Modifier)
                     .clip(RoundedCornerShape(9.dp))
                     .background(if (aktiv) Seitenfarbe.verlauf(s) else SolidColor(Color.Transparent))
                     .clickable { waehlen(s) }
-                    .padding(vertical = 10.dp, horizontal = 4.dp),
-                horizontalArrangement = Arrangement.Center,
+                    .padding(vertical = 10.dp, horizontal = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 SeitenLogo(s, 16.dp)
-                Spacer(Modifier.width(5.dp))
+                Spacer(Modifier.width(6.dp))
                 Text(
                     s,
                     color = if (aktiv) Color.White else Farbe.segment,
@@ -428,7 +440,6 @@ fun SeitenUmschalter(seiten: List<String>, gewaehlt: String, modifier: Modifier 
                     fontFamily = Inter,
                     fontSize = 13.sp,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
                 )
             }
         }

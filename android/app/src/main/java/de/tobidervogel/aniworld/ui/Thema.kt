@@ -57,6 +57,11 @@ object Seitenfarbe {
     fun farben(seite: String): List<Color> = when (seite) {
         "SerienStream" -> listOf(Color(0xFF38BDF8), Color(0xFF2563EB))
         "Filmo" -> listOf(Color(0xFFD946EF), Color(0xFFA21CAF))
+        "FilmPalast" -> listOf(Color(0xFF84CC16), Color(0xFF4D7C0F))
+        "MegaKino" -> listOf(Color(0xFFEF4444), Color(0xFFB91C1C))
+        "Kinox" -> listOf(Color(0xFF34D399), Color(0xFF059669))
+        "BurningSeries" -> listOf(Color(0xFFFB923C), Color(0xFFEA580C))
+        "Moflix" -> listOf(Color(0xFFF43F5E), Color(0xFFBE123C))
         else -> listOf(Color(0xFF8B5CF6), Color(0xFF6D28D9))
     }
 }

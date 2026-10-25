@@ -103,7 +103,7 @@ class MainActivity : ComponentActivity() {
             Intent.ACTION_SEND -> i.getStringExtra(Intent.EXTRA_TEXT)
             else -> null
         } ?: return
-        val link = Regex("""https?://(?:www\.)?(?:aniworld\.to/anime/stream|serienstream\.(?:to|cx)/serie|s\.to/serie|filmo\.to/movies)/[^\s"']+""")
+        val link = Regex("""https?://(?:www\.)?(?:aniworld\.to/anime/stream|serienstream\.(?:to|cx)/serie|s\.to/serie|filmo\.to/movies|filmpalast\.to/stream)/[^\s"']+""")
             .find(text)?.value ?: return
         val serie = App.self.anbieter(link).serienUrl(link) ?: return
         val staffel = Regex("staffel-(\\d+)").find(link)?.groupValues?.get(1)?.toIntOrNull()

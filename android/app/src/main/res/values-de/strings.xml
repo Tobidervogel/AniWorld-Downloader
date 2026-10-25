@@ -207,6 +207,8 @@
     <string name="nav_einstellungen">Optionen</string>
     <string name="titel_suchen">Titel suchen …</string>
     <string name="e_unvollstaendig">Download unvollständig (%1$d von %2$d KB)</string>
+    <string name="reihe_neue_filme">Neue Filme</string>
+    <string name="reihe_top">Top-Filme</string>
     <plurals name="folgen_eingereiht">
         <item quantity="one">%d Folge eingereiht</item>
         <item quantity="other">%d Folgen eingereiht</item>
