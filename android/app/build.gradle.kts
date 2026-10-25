@@ -19,8 +19,8 @@ android {
         // Bewusst 34 und nicht 36: Ab 35 begrenzt Android dataSync-Dienste auf 6 Stunden am Tag,
         // eine lange Staffel würde dann mitten im Download abbrechen.
         targetSdk = 34
-        versionCode = 4
-        versionName = "0.3.1"
+        versionCode = 5
+        versionName = "0.4.0"
     }
 
     // Eigener Schlüssel nur, wenn android/keystore.properties da ist (nicht im Repo):
