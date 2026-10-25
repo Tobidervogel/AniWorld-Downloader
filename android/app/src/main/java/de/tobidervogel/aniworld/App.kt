@@ -10,6 +10,7 @@ import androidx.annotation.StringRes
 import androidx.core.app.NotificationCompat
 import coil.ImageLoader
 import coil.ImageLoaderFactory
+import de.tobidervogel.aniworld.download.AutoSync
 import de.tobidervogel.aniworld.download.Datenbank
 import de.tobidervogel.aniworld.net.Netz
 import de.tobidervogel.aniworld.site.Anbieter
@@ -72,6 +73,10 @@ class App : Application(), ImageLoaderFactory {
         nm.createNotificationChannel(
             NotificationChannel(KANAL_HINWEISE, getString(R.string.kanal_hinweise), NotificationManager.IMPORTANCE_HIGH)
         )
+        nm.createNotificationChannel(
+            NotificationChannel(KANAL_AUTOSYNC, getString(R.string.kanal_autosync), NotificationManager.IMPORTANCE_DEFAULT)
+        )
+        AutoSync.planen(this)
     }
 
     override fun newImageLoader(): ImageLoader = ImageLoader.Builder(this)
@@ -107,6 +112,8 @@ class App : Application(), ImageLoaderFactory {
         val bereit get() = ::self.isInitialized
         const val KANAL_DOWNLOADS = "downloads"
         const val KANAL_HINWEISE = "hinweise"
+        const val KANAL_AUTOSYNC = "autosync"
         const val ID_CHECK = 2
+        const val ID_AUTOSYNC = 4
     }
 }

@@ -47,10 +47,10 @@ data class Auftrag(
 data class Verlauf(val url: String, val titel: String, val cover: String?)
 
 /**
- * SQLite ohne Room: drei kleine Tabellen, keine Migrationen nötig.
+ * SQLite ohne Room: vier kleine Tabellen. Version 2 brachte die Tabelle für Auto-Sync.
  * `stand` zählt bei jeder Änderung hoch, darauf hört die Oberfläche.
  */
-class Datenbank(context: Context) : SQLiteOpenHelper(context, "aniworld.db", null, 1) {
+class Datenbank(context: Context) : SQLiteOpenHelper(context, "aniworld.db", null, 2) {
     private val _stand = MutableStateFlow(0)
     val stand: StateFlow<Int> = _stand
     private fun geaendert() { _stand.value++ }
@@ -69,9 +69,19 @@ class Datenbank(context: Context) : SQLiteOpenHelper(context, "aniworld.db", nul
         )
         db.execSQL("CREATE TABLE verlauf (url TEXT PRIMARY KEY, titel TEXT NOT NULL, cover TEXT, zeit INTEGER NOT NULL)")
         db.execSQL("CREATE TABLE position (schluessel TEXT PRIMARY KEY, ms INTEGER NOT NULL, dauer INTEGER NOT NULL, zeit INTEGER NOT NULL)")
+        autoSyncTabelle(db)
     }
 
-    override fun onUpgrade(db: SQLiteDatabase, alt: Int, neu: Int) = Unit
+    override fun onUpgrade(db: SQLiteDatabase, alt: Int, neu: Int) {
+        if (alt < 2) autoSyncTabelle(db)
+    }
+
+    /** Höchste Folge je Serie und Sprache, die Auto-Sync schon online gesehen hat. */
+    private fun autoSyncTabelle(db: SQLiteDatabase) = db.execSQL(
+        """CREATE TABLE IF NOT EXISTS autosync (
+            serie_url TEXT NOT NULL, sprache TEXT NOT NULL, staffel INTEGER NOT NULL, folge INTEGER NOT NULL,
+            PRIMARY KEY(serie_url, sprache))"""
+    )
 
     // ------------------------------------------------------------ Aufträge
 
@@ -237,5 +247,17 @@ class Datenbank(context: Context) : SQLiteOpenHelper(context, "aniworld.db", nul
             put("schluessel", schluessel); put("ms", ms); put("dauer", dauer); put("zeit", System.currentTimeMillis())
         }, SQLiteDatabase.CONFLICT_REPLACE)
         geaendert()
+    }
+
+    // ------------------------------------------------------------ Auto-Sync
+
+    fun marke(serieUrl: String, sprache: Sprache): Pair<Int, Int>? =
+        readableDatabase.query("autosync", arrayOf("staffel", "folge"), "serie_url = ? AND sprache = ?", arrayOf(serieUrl, sprache.name), null, null, null)
+            .use { c -> if (c.moveToFirst()) c.getInt(0) to c.getInt(1) else null }
+
+    fun markeSetzen(serieUrl: String, sprache: Sprache, marke: Pair<Int, Int>) {
+        writableDatabase.insertWithOnConflict("autosync", null, ContentValues().apply {
+            put("serie_url", serieUrl); put("sprache", sprache.name); put("staffel", marke.first); put("folge", marke.second)
+        }, SQLiteDatabase.CONFLICT_REPLACE)
     }
 }

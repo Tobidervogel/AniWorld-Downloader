@@ -239,4 +239,25 @@
         <item quantity="one">%d Folge</item>
         <item quantity="other">%d Folgen</item>
     </plurals>
+    <string name="kanal_autosync">Auto-Sync</string>
+    <string name="autosync">Auto-Sync</string>
+    <string name="autosync_text">Prüft Serien aus der Bibliothek regelmäßig auf neu erschienene Folgen und reiht sie in der zuletzt geladenen Sprache ein. Was beim ersten Prüfen einer Serie schon online ist, bleibt außen vor.</string>
+    <string name="autosync_abstand">Prüfen alle</string>
+    <string name="autosync_stunden">%1$d Std.</string>
+    <string name="autosync_jetzt">Jetzt prüfen</string>
+    <string name="autosync_laeuft">Prüft gerade …</string>
+    <string name="autosync_nie">Noch nicht gelaufen</string>
+    <string name="autosync_zuletzt">Zuletzt %1$s</string>
+    <plurals name="autosync_geprueft">
+        <item quantity="one">%d Serie geprüft</item>
+        <item quantity="other">%d Serien geprüft</item>
+    </plurals>
+    <plurals name="autosync_neu">
+        <item quantity="one">%d neue Folge</item>
+        <item quantity="other">%d neue Folgen</item>
+    </plurals>
+    <plurals name="autosync_fehler">
+        <item quantity="one">%d Serie nicht erreichbar</item>
+        <item quantity="other">%d Serien nicht erreichbar</item>
+    </plurals>
 </resources>

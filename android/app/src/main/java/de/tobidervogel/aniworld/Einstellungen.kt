@@ -75,6 +75,27 @@ class Einstellungen(context: Context) {
         get() = p.getBoolean("nurWlan", false)
         set(v) { p.edit().putBoolean("nurWlan", v).apply(); geaendert() }
 
+    /** Serien aus der Bibliothek regelmäßig auf neue Folgen prüfen (siehe AutoSync). */
+    var autoSync: Boolean
+        get() = p.getBoolean("autoSync", false)
+        set(v) { p.edit().putBoolean("autoSync", v).apply(); geaendert() }
+
+    var autoSyncStunden: Int
+        get() = p.getInt("autoSyncStunden", 12).takeIf { it in AUTOSYNC_STUNDEN } ?: 12
+        set(v) { p.edit().putInt("autoSyncStunden", v).apply(); geaendert() }
+
+    /** Letzter Lauf: Zeitpunkt, geprüfte Serien, eingereihte Folgen, Fehler. 0 = noch nie. */
+    val autoSyncZuletzt: Long get() = p.getLong("autoSyncZuletzt", 0)
+    val autoSyncGeprueft: Int get() = p.getInt("autoSyncGeprueft", 0)
+    val autoSyncNeu: Int get() = p.getInt("autoSyncNeu", 0)
+    val autoSyncFehler: Int get() = p.getInt("autoSyncFehler", 0)
+
+    fun autoSyncErgebnis(zeit: Long, geprueft: Int, neu: Int, fehler: Int) {
+        p.edit().putLong("autoSyncZuletzt", zeit).putInt("autoSyncGeprueft", geprueft)
+            .putInt("autoSyncNeu", neu).putInt("autoSyncFehler", fehler).apply()
+        geaendert()
+    }
+
     companion object {
         val STANDARD_ORDNER: String =
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES)?.absolutePath
@@ -82,5 +103,7 @@ class Einstellungen(context: Context) {
 
         // VOE, Filemoon und Doodstream liefen beim letzten Provider-Check des Originals, Vidmoly nicht.
         val STANDARD_HOSTER = listOf("VOE", "Filemoon", "Doodstream", "Vidoza", "Vidmoly")
+
+        val AUTOSYNC_STUNDEN = listOf(6, 12, 24)
     }
 }

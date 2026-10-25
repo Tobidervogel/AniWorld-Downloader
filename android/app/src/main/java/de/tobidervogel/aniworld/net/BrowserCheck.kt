@@ -7,6 +7,15 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.coroutines.AbstractCoroutineContextElement
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.coroutineContext
+
+/**
+ * Markiert Abrufe im Hintergrund (Auto-Sync): Dort öffnet sich kein Browserfenster, eine
+ * Prüfseite gilt sofort als nicht bestanden. Sonst hinge der Lauf bis zu zehn Minuten.
+ */
+object StillerAbruf : AbstractCoroutineContextElement(StillerAbruf), CoroutineContext.Key<StillerAbruf>
 
 /**
  * Vermittelt zwischen Netz (merkt, dass eine Schutzseite kommt) und Oberfläche (zeigt das
@@ -32,7 +41,12 @@ object BrowserCheck {
     @Volatile private var zuletztGeloest = 0L
 
     /** Liefert die Endadresse nach bestandener Prüfung, sonst null (abgebrochen, Zeit um). */
-    suspend fun loesen(url: String, verlassen: Boolean = false, heim: Set<String> = emptySet()): String? = sperre.withLock {
+    suspend fun loesen(url: String, verlassen: Boolean = false, heim: Set<String> = emptySet()): String? {
+        if (coroutineContext[StillerAbruf] != null) return null
+        return loesenSichtbar(url, verlassen, heim)
+    }
+
+    private suspend fun loesenSichtbar(url: String, verlassen: Boolean, heim: Set<String>): String? = sperre.withLock {
         // Mehrere Seitenanfragen gleichzeitig: Die erste löst, die anderen versuchen es danach direkt nochmal.
         if (!verlassen && System.currentTimeMillis() - zuletztGeloest < 30_000) return@withLock url
         val anfrage = Anfrage(url, verlassen, heim)

@@ -80,8 +80,6 @@ class MainActivity : ComponentActivity() {
         }
         val start = StartZustand(lifecycleScope, App.self.anbieter)
         verarbeiten(intent)
-        // Nach einem Neustart des Handys oder einem Absturz liegen evtl. noch wartende Folgen da.
-        if (App.self.db.alle().any { it.status == Status.WARTET || it.status == Status.LAEUFT }) DownloadService.starten(this)
         setContent { Thema { Oberflaeche(start) } }
     }
 
@@ -93,6 +91,9 @@ class MainActivity : ComponentActivity() {
     override fun onStart() {
         super.onStart()
         BrowserCheck.appSichtbar = true
+        // Wartende Folgen nach einem Neustart oder Absturz, oder von Auto-Sync, wenn Android den Dienst
+        // aus dem Hintergrund nicht starten ließ: Jetzt im Vordergrund geht es.
+        if (App.self.db.alle().any { it.status == Status.WARTET || it.status == Status.LAEUFT }) DownloadService.starten(this)
     }
 
     override fun onResume() {

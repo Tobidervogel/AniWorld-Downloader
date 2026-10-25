@@ -7,6 +7,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.PowerManager
 import android.provider.Settings
+import android.text.format.DateUtils
 import android.webkit.CookieManager
 import android.widget.Toast
 import androidx.compose.foundation.clickable
@@ -44,10 +45,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
@@ -57,8 +60,10 @@ import de.tobidervogel.aniworld.BuildConfig
 import de.tobidervogel.aniworld.Einstellungen
 import de.tobidervogel.aniworld.Protokoll
 import de.tobidervogel.aniworld.R
+import de.tobidervogel.aniworld.download.AutoSync
 import de.tobidervogel.aniworld.download.Speicher
 import de.tobidervogel.aniworld.site.Sprache
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalLayoutApi::class)
 @SuppressLint("BatteryLife")
@@ -71,6 +76,8 @@ fun EinstellungenSeite(oeffnen: (Ziel) -> Unit) {
     e.stand.collectAsState().value
     Speicher.stand.collectAsState().value
     var ordnerDialog by remember { mutableStateOf(false) }
+    var syncLaeuft by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
     val akkuFrei = ctx.getSystemService(PowerManager::class.java).isIgnoringBatteryOptimizations(ctx.packageName)
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = 32.dp)) {
@@ -127,9 +134,35 @@ fun EinstellungenSeite(oeffnen: (Ziel) -> Unit) {
             Row(Modifier.padding(16.dp, 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf(4, 8, 12, 16).forEach { n -> Pille("$n", e.segmente == n) { e.segmente = n } }
             }
-            Schalter(stringResource(R.string.nur_wlan), stringResource(R.string.nur_wlan_text), e.nurWlan) { e.nurWlan = it }
+            Schalter(stringResource(R.string.nur_wlan), stringResource(R.string.nur_wlan_text), e.nurWlan) { e.nurWlan = it; AutoSync.planen(ctx) }
             Zeile(stringResource(R.string.akku), if (akkuFrei) stringResource(R.string.akku_aus) else stringResource(R.string.akku_an)) {
                 if (!akkuFrei) ctx.startActivity(Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:${ctx.packageName}")))
+            }
+        }
+
+        Gruppe(stringResource(R.string.autosync)) {
+            Schalter(stringResource(R.string.autosync), stringResource(R.string.autosync_text), e.autoSync) { e.autoSync = it; AutoSync.planen(ctx) }
+            if (e.autoSync) {
+                Text(stringResource(R.string.autosync_abstand), Modifier.padding(start = 16.dp, top = 4.dp), color = Farbe.textStark)
+                Row(Modifier.padding(16.dp, 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Einstellungen.AUTOSYNC_STUNDEN.forEach { h ->
+                        Pille(stringResource(R.string.autosync_stunden, h), e.autoSyncStunden == h) { e.autoSyncStunden = h; AutoSync.planen(ctx) }
+                    }
+                }
+            }
+            Zeile(stringResource(R.string.autosync_jetzt), if (syncLaeuft) stringResource(R.string.autosync_laeuft) else autoSyncStand(e)) {
+                if (!syncLaeuft) {
+                    syncLaeuft = true
+                    scope.launch {
+                        try {
+                            // Im Vordergrund darf das Browserfenster aufgehen, falls eine Seite prüft.
+                            val b = AutoSync.lauf(app, still = false)
+                            if (b == null) Toast.makeText(ctx, ctx.getString(R.string.autosync_laeuft), Toast.LENGTH_SHORT).show()
+                        } finally {
+                            syncLaeuft = false
+                        }
+                    }
+                }
             }
         }
 
@@ -180,6 +213,20 @@ fun EinstellungenSeite(oeffnen: (Ziel) -> Unit) {
 }
 
 /** Karte wie .settings-card der Web-UI: Überschrift in der Karte, Zeilen durch Linien getrennt. */
+/** „Zuletzt: 25.10., 14:02 · 12 Serien geprüft · 3 neue Folgen“ */
+@Composable
+private fun autoSyncStand(e: Einstellungen): String {
+    if (e.autoSyncZuletzt == 0L) return stringResource(R.string.autosync_nie)
+    val zeit = DateUtils.formatDateTime(LocalContext.current, e.autoSyncZuletzt, DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_SHOW_TIME or DateUtils.FORMAT_ABBREV_ALL)
+    val teile = mutableListOf(
+        stringResource(R.string.autosync_zuletzt, zeit),
+        pluralStringResource(R.plurals.autosync_geprueft, e.autoSyncGeprueft, e.autoSyncGeprueft),
+        pluralStringResource(R.plurals.autosync_neu, e.autoSyncNeu, e.autoSyncNeu),
+    )
+    if (e.autoSyncFehler > 0) teile += pluralStringResource(R.plurals.autosync_fehler, e.autoSyncFehler, e.autoSyncFehler)
+    return teile.joinToString(" · ")
+}
+
 @Composable
 private fun Gruppe(titel: String, inhalt: @Composable () -> Unit) {
     Column(Modifier.padding(horizontal = 16.dp, vertical = 6.dp).fillMaxWidth().karte().padding(bottom = 6.dp)) {

@@ -241,4 +241,25 @@
         <item quantity="one">%d episode</item>
         <item quantity="other">%d episodes</item>
     </plurals>
+    <string name="kanal_autosync">Auto-Sync</string>
+    <string name="autosync">Auto-Sync</string>
+    <string name="autosync_text">Regularly checks series in your library for newly released episodes and queues them in the language you last downloaded. Whatever is already online when a series is first checked is left out.</string>
+    <string name="autosync_abstand">Check every</string>
+    <string name="autosync_stunden">%1$d h</string>
+    <string name="autosync_jetzt">Check now</string>
+    <string name="autosync_laeuft">Checking …</string>
+    <string name="autosync_nie">Not run yet</string>
+    <string name="autosync_zuletzt">Last run %1$s</string>
+    <plurals name="autosync_geprueft">
+        <item quantity="one">%d series checked</item>
+        <item quantity="other">%d series checked</item>
+    </plurals>
+    <plurals name="autosync_neu">
+        <item quantity="one">%d new episode</item>
+        <item quantity="other">%d new episodes</item>
+    </plurals>
+    <plurals name="autosync_fehler">
+        <item quantity="one">%d series not reachable</item>
+        <item quantity="other">%d series not reachable</item>
+    </plurals>
 </resources>
